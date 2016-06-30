@@ -45,71 +45,37 @@ opto_stim_resample=putDeltasIntoResample(opto_stim,length(1:T),max(opto_stim)./5
 plot_components_GUI_withopto(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample);
 
 % Get average opto-triggered responses
-[optoTriggeredResponses,avOpto]=getOptoResponseAcrossCells(opto_stim_resample,C_df);
-% Plot GUI with average opto-triggered responses
-plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,optoTriggeredResponses,avOpto);
+plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,acrossTrials,opto);
 
 end
 
-function [optoTriggeredResponses,avOpto]=getOptoResponseAcrossCells(opto_stim,C_df)
+function getOptoResponseAcrossCells(opto_stim,C_df)
 
-optoTriggeredResponses=cell(1,size(C_df,1));
-allOpto=nan(size(C_df,1),length(opto_stim));
 for i=1:size(C_df,1)
     % Consider each neuron's trace
-    [optoTriggeredResponses{i},acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df(i,:));
-    avOpto=nanmean(acrossTrialsOpto,1);
-    allOpto(i,1:length(avOpto))=avOpto;
-end
-avOpto=nanmean(allOpto,1);
-avOpto=avOpto(~isnan(avOpto));
+    
 
 end
 
-function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df)
+function acrossTrialsResponse=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
 baseInds=10; % number of indices to take as baseline
-baseSubtract=1; % base-subtract traces if yes
 
 [~,pklocs]=findpeaks(opto_stim);
 indsBetweenOpto=mode(diff(pklocs));
 acrossTrialsResponse=nan(length(pklocs),indsBetweenOpto);
-acrossTrialsOpto=nan(length(pklocs),indsBetweenOpto);
 for i=1:length(pklocs)
     if pklocs(i)-baseInds<1
         temp=C_df(1:pklocs(i)+indsBetweenOpto-1);
-        if baseSubtract==1
-            temp=temp-nanmean(C_df(1:pklocs(i)-1));
-        end
         acrossTrialsResponse(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
     else
         if pklocs(i)+indsBetweenOpto-1>length(C_df)
             temp=C_df(pklocs(i)-baseInds:end);
-            if baseSubtract==1
-                temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
-            end
         else
             temp=C_df(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
-            if baseSubtract==1
-                temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
-            end
         end
         acrossTrialsResponse(i,1:length(temp))=temp;
-    end
-end
-
-for i=1:length(pklocs)
-    if pklocs(i)-baseInds<1
-        temp=opto_stim(1:pklocs(i)+indsBetweenOpto-1);
-        acrossTrialsOpto(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
-    else
-        if pklocs(i)+indsBetweenOpto-1>length(opto_stim)
-            temp=opto_stim(pklocs(i)-baseInds:end);
-        else
-            temp=opto_stim(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
-        end
-        acrossTrialsOpto(i,1:length(temp))=temp;
     end
 end
     

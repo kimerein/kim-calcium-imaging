@@ -1,4 +1,4 @@
-function plot_dFoverF_vs_opto(C_df,acq_obj,nameOptoCommand,Yr,A_or,C_or,b2,f2,Cn,options)
+function plot_dFoverF_vs_opto_AsFunctionOfBehavior(C_df,acq_obj,nameOptoCommand,Yr,A_or,C_or,b2,f2,Cn,options,nameBehaviorCommand)
 % C_df is deltaF over F in the form of a matrix where rows are neurons and
 % columns are time points
 % Last row of C_df is background
@@ -28,6 +28,7 @@ else
     end
 end
 opto_shutterTimesRemoved=loadOptoData(acq_obj,nameOptoCommand,shutterData);
+beh_shutterTimesRemoved=loadGenericPhysData(acq_obj,nameBehaviorCommand,shutterData);
 % Time points when movie was shuttered have now been removed from opto data
 
 % Concatenate opto stim across trials to match continuous dFoverF traces
@@ -36,22 +37,44 @@ for i=1:length(opto_shutterTimesRemoved)
     opto_stim=[opto_stim opto_shutterTimesRemoved{i}];
 end
 
+% Concatenate behavior across trials to match continuous dFoverF traces
+% Take derivative of encoder position to get angular velocity as a function
+% of time
+beh=[];
+for i=1:length(beh_shutterTimesRemoved)
+    vel=angular_velocity(beh_shutterTimesRemoved{i});
+    vel=vel';
+    beh=[beh vel*1000 vel(end)*1000]; % Pad at end so length of velocity vector matches length of position vector
+end
+
 % Now compare opto stim to dFoverF
 T = size(C_or,2); % 1:T is length of dFoverF
 % Force opto_stim to match length of dFoverF
 opto_stim_resample=putDeltasIntoResample(opto_stim,length(1:T),max(opto_stim)./5);
+if length(beh)>length(1:T)
+    ds=floor(length(beh)/length(1:T));
+    beh_resample=beh(1:ds:end);
+    beh_resample=beh_resample(1:length(1:T));
+elseif length(1:T)>length(beh)
+    beh_resample=interp(beh,ceil(length(1:T)/length(beh)));
+    beh_resample=beh_resample(1:length(1:T));
+end
 
 % Plot dFoverF GUI with opto data
-plot_components_GUI_withopto(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample);
+plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample,beh_resample);
 
 % Get average opto-triggered responses
-[optoTriggeredResponses,avOpto]=getOptoResponseAcrossCells(opto_stim_resample,C_df);
+[optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(opto_stim_resample,C_df,beh_resample);
+
+% Find trials with desired behavior profile
+
+
 % Plot GUI with average opto-triggered responses
 plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,optoTriggeredResponses,avOpto);
 
 end
 
-function [optoTriggeredResponses,avOpto]=getOptoResponseAcrossCells(opto_stim,C_df)
+function [optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(opto_stim,C_df,beh)
 
 optoTriggeredResponses=cell(1,size(C_df,1));
 allOpto=nan(size(C_df,1),length(opto_stim));
@@ -61,6 +84,7 @@ for i=1:size(C_df,1)
     avOpto=nanmean(acrossTrialsOpto,1);
     allOpto(i,1:length(avOpto))=avOpto;
 end
+trialByTrialBeh=optoTriggeredResponse(opto_stim,beh);
 avOpto=nanmean(allOpto,1);
 avOpto=avOpto(~isnan(avOpto));
 
@@ -338,7 +362,7 @@ plot_component(1)
     end
 end
 
-function plot_components_GUI_withopto(Y,A,C,b,f,Cn,options,opto_stim)
+function plot_components_GUI_withopto_andBeh(Y,A,C,b,f,Cn,options,opto_stim,beh_resample)
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
@@ -483,12 +507,13 @@ plot_component(1)
             plot(1:T,Y_r(i,:)/Df(i),'linewidth',2); hold all; plot(1:T,C(i,:)/Df(i),'linewidth',2);
             % Overlay opto stim times
             plot(1:T,opto_stim,'linewidth',2);
+            plot(1:T,beh_resample,'linewidth',1);
             if plot_df
                 title(sprintf('Component %i (calcium DF/F value)',i),'fontsize',16,'fontweight','bold');
             else
                 title(sprintf('Component %i (calcium raw value)',i),'fontsize',16,'fontweight','bold');
             end
-            leg = legend('Raw trace (filtered)','Inferred','Opto Stim');
+            leg = legend('Raw trace (filtered)','Inferred','Opto Stim','Angular Velocity');
             set(leg,'FontSize',14,'FontWeight','bold');
             drawnow;
             hold off;

@@ -1,9 +1,9 @@
-function opto_shutterTimesRemoved=loadOptoData(obj,nameOptoCommand,shutterData)
+function opto_shutterTimesRemoved=loadGenericPhysData(obj,nameOptoCommand,shutterData)
 % obj is Acquisition2P object from Harvey lab motion correction
 
 % Calculate number of movies and arrange processing order so that
 % reference is first
-% This orders opto data to match movie order
+% This orders phys data to match movie order
 nMovies = length(obj.Movies);
 if isempty(obj.motionRefMovNum)
     obj.motionRefMovNum = floor(nMovies/2);
@@ -17,16 +17,13 @@ end
 samplingRate=obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of phys data
 times=0:1/samplingRate:(1/samplingRate)*size(shutterData,2)-(1/samplingRate);
 
-% Load in opto data
+% Load in phys data
 optoData=findPhysData(obj,movieOrder,nameOptoCommand);
 
-% Remove from opto data time points when imaging shutter is closed 
-% Note that this will remove voltage commands of opto stimuli from the
-% data, because imaging is shuttered while opto is on
-% Thus, add delta functions to represent opto stimuli
+% Remove from phys data time points when imaging shutter is closed 
 opto_shutterTimesRemoved=cell(1,size(optoData,1)); % Accomodates different time points shuttered in each trial
 for i=1:size(optoData,1)
-    [shuttered_opto,shuttered_times]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,50);
+    [shuttered_opto,shuttered_times]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,0.5);
     % Cut off or fill end of each trial so duration of opto matches duration of
     % imaging acquisition for trial
     opto_shutterTimesRemoved{i}=fixTrialToMatchImaging(obj,shuttered_opto,shuttered_times);
@@ -181,18 +178,10 @@ for i=1:size(shutterOffTimes,1)
     isShutteredTime(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))=1;
     if insertOptoDelta==1
         % If otherData is high during this shuttered time window
-        if any(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
-            timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
-            % Make first time point after shuttered window high
-            otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
-        end
-        
-%         % If otherData is low during this shuttered time window (i.e.,
-%         % shutter only, no opto stim)
-%         if all(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))<opto_on_thresh)
+%         if any(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
 %             timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
 %             % Make first time point after shuttered window high
-%             otherData(timepointAfterShutter)=max(otherData);
+%             otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
 %         end
     end
 end
