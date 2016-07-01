@@ -67,10 +67,48 @@ plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resa
 [optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(opto_stim_resample,C_df,beh_resample);
 
 % Find trials with desired behavior profile
+profile=chooseBehaviorProfile(trialByTrialBeh,avOpto);
+
+% Plot GUI with average opto-triggered responses from trials matching
+% behavior profile
+plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,takeTrialsForEachCell(optoTriggeredResponses,profile),avOpto,nanmean(trialByTrialBeh(profile,:),1));
+
+% Plot distribution of dF over F values AFTER opto stim as function of dF
+% over F before opto stim
+cellNum=1;
+baseInds=10; 
+% afterInds=20;
+curr_dFoverF=optoTriggeredResponses{cellNum};
+% curr_dFoverF=curr_dFoverF(floor(size(curr_dFoverF,1)/2):end,:);
+% curr_dFoverF=curr_dFoverF(profile,:);
+medVal=nanmedian(curr_dFoverF(1:end));
+dFoverF_beforeOpto=nanmean(curr_dFoverF(:,1:baseInds),2);
+dFoverF_afterOpto=nanmean(curr_dFoverF(:,baseInds+1+baseInds-1),2)-nanmean(curr_dFoverF(:,1:baseInds),2);
+[nHigh,xHigh]=hist(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),10);
+[nLow,xLow]=hist(dFoverF_afterOpto(dFoverF_beforeOpto<=medVal),10);
+ranksum(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),dFoverF_afterOpto(dFoverF_beforeOpto<=medVal));
+dFoverF_beforeOpto=nanmean(curr_dFoverF(:,40:40+baseInds),2);
+dFoverF_afterOpto=nanmean(curr_dFoverF(:,40+baseInds+1+baseInds-1),2)-nanmean(curr_dFoverF(:,40:40+baseInds),2);
+[nHigh_fake,xHigh_fake]=hist(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),10);
+[nLow_fake,xLow_fake]=hist(dFoverF_afterOpto(dFoverF_beforeOpto<=medVal),10);
+
+figure(); 
+plot(xHigh,nHigh,'Color','r');
+hold on;
+plot(xHigh_fake,nHigh_fake,'Color','g');
+legend('High Before','High Before Fake');
 
 
-% Plot GUI with average opto-triggered responses
-plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,optoTriggeredResponses,avOpto);
+end
+
+function outResponses=takeTrialsForEachCell(responses,useTrials)
+
+outResponses=cell(1,length(responses));
+for i=1:length(responses)
+    r=responses{i};
+    outR=r(useTrials,:);
+    outResponses{i}=outR;
+end
 
 end
 
@@ -94,7 +132,7 @@ function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim
 % C_df is deltaFoverF trace from one neuron (vector)
 
 baseInds=10; % number of indices to take as baseline
-baseSubtract=1; % base-subtract traces if yes
+baseSubtract=0; % base-subtract traces if yes
 
 [~,pklocs]=findpeaks(opto_stim);
 indsBetweenOpto=mode(diff(pklocs));
@@ -158,7 +196,7 @@ newSignal(isHigh==1)=1;
 
 end
 
-function plot_avOptoTriggered_components_GUI(Y,A,C,b,f,Cn,options,acrossTrials,opto)
+function plot_avOptoTriggered_components_GUI(Y,A,C,b,f,Cn,options,acrossTrials,opto,beh)
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
@@ -306,12 +344,13 @@ plot_component(1)
             hold all;
 %             Overlay opto stim times
             plot(1:size(currAv,2),opto,'linewidth',2);
+            plot(1:length(beh),beh,'linewidth',1);
             if plot_df
                 title(sprintf('Component %i (calcium DF/F value)',i),'fontsize',16,'fontweight','bold');
             else
                 title(sprintf('Component %i (calcium raw value)',i),'fontsize',16,'fontweight','bold');
             end
-            leg = legend('Inferred','Opto Stim');
+            leg = legend('Inferred','Opto Stim','Angular Velocity');
             set(leg,'FontSize',14,'FontWeight','bold');
             plot(1:size(currAv,2),nanmean(currAv,1)+nanstd(currAv,[],1)./sqrt(size(currAv,1)),'linewidth',1,'Color','r');
             plot(1:size(currAv,2),nanmean(currAv,1)-nanstd(currAv,[],1)./sqrt(size(currAv,1)),'linewidth',1,'Color','r');

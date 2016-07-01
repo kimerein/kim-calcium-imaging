@@ -8,7 +8,7 @@ function profile=chooseBehaviorProfile(behavior,opto_stim)
 % was closed
 
 % Set parameters
-runningBefore=[0]; % Set this to 1 if you want to select trials where animal was running before opto stim 
+runningBefore=[0 1]; % Set this to 1 if you want to select trials where animal was running before opto stim 
 % Set runningBefore to [0 1] if don't care whether animal was running prior
 % to opto stim
 runningAfter=[0 1]; % Set this to 1 if you want to select trials where animal was stationary prior to opto stim
