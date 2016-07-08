@@ -68,6 +68,7 @@ plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resa
 
 % Find trials with desired behavior profile
 profile=chooseBehaviorProfile(trialByTrialBeh,avOpto);
+display(sum(profile));
 
 % Plot GUI with average opto-triggered responses from trials matching
 % behavior profile
