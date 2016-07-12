@@ -74,37 +74,37 @@ display(sum(profile));
 % behavior profile
 plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,takeTrialsForEachCell(optoTriggeredResponses,profile),avOpto,nanmean(trialByTrialBeh(profile,:),1));
 
-% Plot distribution of dF over F values AFTER opto stim as function of dF
-% over F before opto stim
-cellNum=38;
-baseInds=10; 
-% afterInds=20;
-curr_dFoverF=optoTriggeredResponses{cellNum};
-% curr_dFoverF=curr_dFoverF(floor(size(curr_dFoverF,1)/2):end,:);
-% curr_dFoverF=curr_dFoverF(profile,:);
-medVal=nanmedian(curr_dFoverF(1:end));
-dFoverF_beforeOpto=nanmean(curr_dFoverF(:,1:baseInds),2);
-dFoverF_afterOpto=nanmean(curr_dFoverF(:,baseInds+1+baseInds-1),2)-nanmean(curr_dFoverF(:,1:baseInds),2);
-[nHigh,xHigh]=hist(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),10);
-[nLow,xLow]=hist(dFoverF_afterOpto(dFoverF_beforeOpto<=medVal),10);
-dFoverF_beforeOpto_fake=nanmean(curr_dFoverF(:,40:40+baseInds),2);
-dFoverF_afterOpto_fake=nanmean(curr_dFoverF(:,40+baseInds+1+baseInds-1),2)-nanmean(curr_dFoverF(:,40:40+baseInds),2);
-[nHigh_fake,xHigh_fake]=hist(dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake>medVal),10);
-[nLow_fake,xLow_fake]=hist(dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake<=medVal),10);
-p_high=ranksum(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake>medVal))
-p_low=ranksum(dFoverF_afterOpto(dFoverF_beforeOpto<=medVal),dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake<=medVal))
-
-figure(); 
-plot(xHigh,nHigh,'Color','r');
-hold on;
-plot(xHigh_fake,nHigh_fake,'Color','g');
-legend('High Before','High Before Fake');
-
-figure(); 
-plot(xLow,nLow,'Color','r');
-hold on;
-plot(xLow_fake,nLow_fake,'Color','g');
-legend('Low Before','Low Before Fake');
+% % Plot distribution of dF over F values AFTER opto stim as function of dF
+% % over F before opto stim
+% cellNum=38;
+% baseInds=10; 
+% % afterInds=20;
+% curr_dFoverF=optoTriggeredResponses{cellNum};
+% % curr_dFoverF=curr_dFoverF(floor(size(curr_dFoverF,1)/2):end,:);
+% % curr_dFoverF=curr_dFoverF(profile,:);
+% medVal=nanmedian(curr_dFoverF(1:end));
+% dFoverF_beforeOpto=nanmean(curr_dFoverF(:,1:baseInds),2);
+% dFoverF_afterOpto=nanmean(curr_dFoverF(:,baseInds+1+baseInds-1),2)-nanmean(curr_dFoverF(:,1:baseInds),2);
+% [nHigh,xHigh]=hist(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),10);
+% [nLow,xLow]=hist(dFoverF_afterOpto(dFoverF_beforeOpto<=medVal),10);
+% dFoverF_beforeOpto_fake=nanmean(curr_dFoverF(:,40:40+baseInds),2);
+% dFoverF_afterOpto_fake=nanmean(curr_dFoverF(:,40+baseInds+1+baseInds-1),2)-nanmean(curr_dFoverF(:,40:40+baseInds),2);
+% [nHigh_fake,xHigh_fake]=hist(dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake>medVal),10);
+% [nLow_fake,xLow_fake]=hist(dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake<=medVal),10);
+% p_high=ranksum(dFoverF_afterOpto(dFoverF_beforeOpto>medVal),dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake>medVal))
+% p_low=ranksum(dFoverF_afterOpto(dFoverF_beforeOpto<=medVal),dFoverF_afterOpto_fake(dFoverF_beforeOpto_fake<=medVal))
+% 
+% figure(); 
+% plot(xHigh,nHigh,'Color','r');
+% hold on;
+% plot(xHigh_fake,nHigh_fake,'Color','g');
+% legend('High Before','High Before Fake');
+% 
+% figure(); 
+% plot(xLow,nLow,'Color','r');
+% hold on;
+% plot(xLow_fake,nLow_fake,'Color','g');
+% legend('Low Before','Low Before Fake');
 
 end
 
@@ -139,7 +139,7 @@ function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim
 % C_df is deltaFoverF trace from one neuron (vector)
 
 baseInds=10; % number of indices to take as baseline
-baseSubtract=0; % base-subtract traces if yes
+baseSubtract=1; % base-subtract traces if yes
 
 [~,pklocs]=findpeaks(opto_stim);
 indsBetweenOpto=mode(diff(pklocs));

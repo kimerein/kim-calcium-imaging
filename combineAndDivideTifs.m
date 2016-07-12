@@ -45,7 +45,8 @@ if ~isempty(combinedMovie)
         return
     else
         temp=abs(segments-nSpatialPieces);
-        nSpatialPieces=segments(min(temp));
+        [~,mi]=min(temp);
+        nSpatialPieces=segments(mi);
     end
     if nSpatialPieces>1
         % Spatially sub-divide tif movie
@@ -65,10 +66,10 @@ if ~isempty(combinedMovie)
                 rangeX2=floor(dimX/2 - nPixelsOverlap_x/2):dimX;
                 rangeY1=1:floor(dimY/2 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY2=floor(dimY/2 - nPixelsOverlap_y/2):dimY;
-                combined{1}=combinedMovie(rangeX1,rangeY1,:);
-                combined{2}=combinedMovie(rangeX2,rangeY1,:);
-                combined{3}=combinedMovie(rangeX1,rangeY2,:);
-                combined{4}=combinedMovie(rangeX2,rangeY2,:);
+                combined{1}=combinedMovie(rangeY1,rangeX1,:);
+                combined{2}=combinedMovie(rangeY1,rangeX2,:);
+                combined{3}=combinedMovie(rangeY2,rangeX1,:);
+                combined{4}=combinedMovie(rangeY2,rangeX2,:);
             case 6
                 combined=cell(1,6);
                 rangeX1=1:floor(dimX/3 - nPixelsOverlap_x/2)+nPixelsOverlap_x;
@@ -76,12 +77,12 @@ if ~isempty(combinedMovie)
                 rangeX3=floor(2*dimX/3 - nPixelsOverlap_x/2):dimX;
                 rangeY1=1:floor(dimY/2 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY2=floor(dimY/2 - nPixelsOverlap_y/2):dimY;
-                combined{1}=combinedMovie(rangeX1,rangeY1,:);
-                combined{2}=combinedMovie(rangeX2,rangeY1,:);
-                combined{3}=combinedMovie(rangeX3,rangeY1,:);
-                combined{4}=combinedMovie(rangeX1,rangeY2,:);
-                combined{5}=combinedMovie(rangeX2,rangeY2,:);
-                combined{6}=combinedMovie(rangeX3,rangeY2,:);
+                combined{1}=combinedMovie(rangeY1,rangeX1,:);
+                combined{2}=combinedMovie(rangeY1,rangeX2,:);
+                combined{3}=combinedMovie(rangeY1,rangeX3,:);
+                combined{4}=combinedMovie(rangeY2,rangeX1,:);
+                combined{5}=combinedMovie(rangeY2,rangeX2,:);
+                combined{6}=combinedMovie(rangeY2,rangeX3,:);
             case 9
                 combined=cell(1,9);
                 rangeX1=1:floor(dimX/3 - nPixelsOverlap_x/2)+nPixelsOverlap_x;
@@ -90,15 +91,15 @@ if ~isempty(combinedMovie)
                 rangeY1=1:floor(dimY/3 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY2=floor(dimY/3 - nPixelsOverlap_y/2):floor(2*dimY/3 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY3=floor(2*dimY/3 - nPixelsOverlap_y/2):dimY;
-                combined{1}=combinedMovie(rangeX1,rangeY1,:);
-                combined{2}=combinedMovie(rangeX2,rangeY1,:);
-                combined{3}=combinedMovie(rangeX3,rangeY1,:);
-                combined{4}=combinedMovie(rangeX1,rangeY2,:);
-                combined{5}=combinedMovie(rangeX2,rangeY2,:);
-                combined{6}=combinedMovie(rangeX3,rangeY2,:);
-                combined{7}=combinedMovie(rangeX1,rangeY3,:);
-                combined{8}=combinedMovie(rangeX2,rangeY3,:);
-                combined{9}=combinedMovie(rangeX3,rangeY3,:);
+                combined{1}=combinedMovie(rangeY1,rangeX1,:);
+                combined{2}=combinedMovie(rangeY1,rangeX2,:);
+                combined{3}=combinedMovie(rangeY1,rangeX3,:);
+                combined{4}=combinedMovie(rangeY2,rangeX1,:);
+                combined{5}=combinedMovie(rangeY2,rangeX2,:);
+                combined{6}=combinedMovie(rangeY2,rangeX3,:);
+                combined{7}=combinedMovie(rangeY3,rangeX1,:);
+                combined{8}=combinedMovie(rangeY3,rangeX2,:);
+                combined{9}=combinedMovie(rangeY3,rangeX3,:);
             case 12
                 combined=cell(1,12);
                 rangeX1=1:floor(dimX/4 - nPixelsOverlap_x/2)+nPixelsOverlap_x;
@@ -108,18 +109,18 @@ if ~isempty(combinedMovie)
                 rangeY1=1:floor(dimY/3 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY2=floor(dimY/3 - nPixelsOverlap_y/2):floor(2*dimY/3 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY3=floor(2*dimY/3 - nPixelsOverlap_y/2):dimY;
-                combined{1}=combinedMovie(rangeX1,rangeY1,:);
-                combined{2}=combinedMovie(rangeX2,rangeY1,:);
-                combined{3}=combinedMovie(rangeX3,rangeY1,:);
-                combined{4}=combinedMovie(rangeX4,rangeY1,:);
-                combined{5}=combinedMovie(rangeX1,rangeY2,:);
-                combined{6}=combinedMovie(rangeX2,rangeY2,:);
-                combined{7}=combinedMovie(rangeX3,rangeY2,:);
-                combined{8}=combinedMovie(rangeX4,rangeY2,:);
-                combined{9}=combinedMovie(rangeX1,rangeY3,:);
-                combined{10}=combinedMovie(rangeX2,rangeY3,:);
-                combined{11}=combinedMovie(rangeX3,rangeY3,:);
-                combined{12}=combinedMovie(rangeX4,rangeY3,:);
+                combined{1}=combinedMovie(rangeY1,rangeX1,:);
+                combined{2}=combinedMovie(rangeY1,rangeX2,:);
+                combined{3}=combinedMovie(rangeY1,rangeX3,:);
+                combined{4}=combinedMovie(rangeY1,rangeX4,:);
+                combined{5}=combinedMovie(rangeY2,rangeX1,:);
+                combined{6}=combinedMovie(rangeY2,rangeX2,:);
+                combined{7}=combinedMovie(rangeY2,rangeX3,:);
+                combined{8}=combinedMovie(rangeY2,rangeX4,:);
+                combined{9}=combinedMovie(rangeY3,rangeX1,:);
+                combined{10}=combinedMovie(rangeY3,rangeX2,:);
+                combined{11}=combinedMovie(rangeY3,rangeX3,:);
+                combined{12}=combinedMovie(rangeY3,rangeX4,:);
             case 16
                 combined=cell(1,16);
                 rangeX1=1:floor(dimX/4 - nPixelsOverlap_x/2)+nPixelsOverlap_x;
@@ -130,36 +131,36 @@ if ~isempty(combinedMovie)
                 rangeY2=floor(dimY/4 - nPixelsOverlap_y/2):floor(2*dimY/4 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY3=floor(2*dimY/4 - nPixelsOverlap_y/2):floor(3*dimY/4 - nPixelsOverlap_y/2)+nPixelsOverlap_y;
                 rangeY4=floor(3*dimY/4 - nPixelsOverlap_y/2):dimY;
-                combined{1}=combinedMovie(rangeX1,rangeY1,:);
-                combined{2}=combinedMovie(rangeX2,rangeY1,:);
-                combined{3}=combinedMovie(rangeX3,rangeY1,:);
-                combined{4}=combinedMovie(rangeX4,rangeY1,:);
-                combined{5}=combinedMovie(rangeX1,rangeY2,:);
-                combined{6}=combinedMovie(rangeX2,rangeY2,:);
-                combined{7}=combinedMovie(rangeX3,rangeY2,:);
-                combined{8}=combinedMovie(rangeX4,rangeY2,:);
-                combined{9}=combinedMovie(rangeX1,rangeY3,:);
-                combined{10}=combinedMovie(rangeX2,rangeY3,:);
-                combined{11}=combinedMovie(rangeX3,rangeY3,:);
-                combined{12}=combinedMovie(rangeX4,rangeY3,:);
-                combined{13}=combinedMovie(rangeX1,rangeY4,:);
-                combined{14}=combinedMovie(rangeX2,rangeY4,:);
-                combined{15}=combinedMovie(rangeX3,rangeY4,:);
-                combined{16}=combinedMovie(rangeX4,rangeY4,:);
+                combined{1}=combinedMovie(rangeY1,rangeX1,:);
+                combined{2}=combinedMovie(rangeY1,rangeX2,:);
+                combined{3}=combinedMovie(rangeY1,rangeX3,:);
+                combined{4}=combinedMovie(rangeY1,rangeX4,:);
+                combined{5}=combinedMovie(rangeY2,rangeX1,:);
+                combined{6}=combinedMovie(rangeY2,rangeX2,:);
+                combined{7}=combinedMovie(rangeY2,rangeX3,:);
+                combined{8}=combinedMovie(rangeY2,rangeX4,:);
+                combined{9}=combinedMovie(rangeY3,rangeX1,:);
+                combined{10}=combinedMovie(rangeY3,rangeX2,:);
+                combined{11}=combinedMovie(rangeY3,rangeX3,:);
+                combined{12}=combinedMovie(rangeY3,rangeX4,:);
+                combined{13}=combinedMovie(rangeY4,rangeX1,:);
+                combined{14}=combinedMovie(rangeY4,rangeX2,:);
+                combined{15}=combinedMovie(rangeY4,rangeX3,:);
+                combined{16}=combinedMovie(rangeY4,rangeX4,:);
             otherwise
                 disp('Currently code supports only subdivision into 1,2,4,6,9,12 or 16 pieces');
         end
     end
     try
         for i=1:length(combined)
-            tiffWrite(combinedMovie,['combined' num2str(i) '.tif'],pathname,'int16');
+            tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'int16');
         end
     catch
         % Sometimes, disk access fails due to intermittent
         % network problem. In that case, wait and re-try once:
         pause(60);
         for i=1:length(combined)
-            tiffWrite(combinedMovie,['combined' num2str(i) '.tif'],pathname,'int16');
+            tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'int16');
         end
     end
 else
