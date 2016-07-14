@@ -1,4 +1,4 @@
-function opto_shutterTimesRemoved=loadOptoData(obj,nameOptoCommand,shutterData)
+function [opto_shutterTimesRemoved,optoMapping,groups]=loadOptoData(obj,nameOptoCommand,shutterData)
 % obj is Acquisition2P object from Harvey lab motion correction
 
 % Calculate number of movies and arrange processing order so that
@@ -19,6 +19,13 @@ times=0:1/samplingRate:(1/samplingRate)*size(shutterData,2)-(1/samplingRate);
 
 % Load in opto data
 optoData=findPhysData(obj,movieOrder,nameOptoCommand);
+disp('inside here');
+
+% Create a mapping that specifies which opto stim types were given in this
+% experiment (i.e., are present in the current data set), and map these
+% opto stim types to integer values
+[optoMapping,groups]=createOptoMapping(optoData);
+disp('inside here2')
 
 % Remove from opto data time points when imaging shutter is closed 
 % Note that this will remove voltage commands of opto stimuli from the
@@ -26,11 +33,12 @@ optoData=findPhysData(obj,movieOrder,nameOptoCommand);
 % Thus, add delta functions to represent opto stimuli
 opto_shutterTimesRemoved=cell(1,size(optoData,1)); % Accomodates different time points shuttered in each trial
 for i=1:size(optoData,1)
-    [shuttered_opto,shuttered_times]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,50);
+    [shuttered_opto,shuttered_times]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,30,groups(i));
     % Cut off or fill end of each trial so duration of opto matches duration of
     % imaging acquisition for trial
     opto_shutterTimesRemoved{i}=fixTrialToMatchImaging(obj,shuttered_opto,shuttered_times);
 end
+disp('inside here3');
 
 end
 
@@ -101,7 +109,7 @@ end
    
 end
 
-function [otherData,times]=removeShutteredTimes(obj,shutterData,otherData,times,insertOptoDelta,opto_on_thresh)
+function [otherData,times]=removeShutteredTimes(obj,shutterData,otherData,times,insertOptoDelta,opto_on_thresh,group)
 % Removes shuttered time points from otherData so as to match otherData
 % to movies with shuttered frames removed
 % 
@@ -183,8 +191,12 @@ for i=1:size(shutterOffTimes,1)
         % If otherData is high during this shuttered time window
         if any(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
             timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
-            % Make first time point after shuttered window high
-            otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
+%             % Make first time point after shuttered window high
+%             otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
+            % Make first time point after shuttered window represent which opto
+            % stim was presented
+            otherData(timepointAfterShutter)=group;
+            otherData([1:timepointAfterShutter-1 timepointAfterShutter+1:end])=0;
         end
         
 %         % If otherData is low during this shuttered time window (i.e.,
@@ -200,3 +212,48 @@ otherData=otherData(isShutteredTime==0);
 times=times(isShutteredTime==0);
   
 end
+
+function [optoMapping,groups]=createOptoMapping(optoData)
+
+% optoData is opto voltage command
+% rows are trials; columns are time points
+
+% Get the set of opto stim presented in this expt (i.e., current data set)
+noiseThresh=1; % threshold for high-frequency noise
+isSorted=zeros(size(optoData,1),1);
+groups=nan(size(optoData,1),1);
+currGroup=1;
+safetyCounter=1;
+while any(isSorted==0)
+   currInd=find(isSorted==0,1,'first');
+   currOpto=optoData(currInd,:);
+   groups(currInd)=currGroup;
+   for i=1:size(optoData,1)
+       if isSorted(i)==0
+           if all(abs(currOpto-optoData(i,:))<noiseThresh) % if vectors are equal
+               groups(i)=currGroup;
+               isSorted(i)=1;
+           end
+       end
+   end
+   currGroup=currGroup+1;
+   safetyCounter=safetyCounter+1;
+   if safetyCounter>size(optoData,1)
+       break
+   end          
+end
+
+% Make a mapping of these opto stim types onto an integer set
+uniqueGroups=unique(groups);
+optoMapping=cell(length(uniqueGroups),2);
+for i=1:length(uniqueGroups)
+    % Put in the opto stim type as a vector of values containing voltage
+    % command to opto
+    f=find(groups==uniqueGroups(i),1,'first');
+    optoMapping{i,1}=optoData(f,:);
+    % Put in the integer value that maps to this opto stim type
+    optoMapping{i,2}=uniqueGroups(i);
+end
+
+end
+

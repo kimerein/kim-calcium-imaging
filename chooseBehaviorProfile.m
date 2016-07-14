@@ -8,13 +8,13 @@ function profile=chooseBehaviorProfile(behavior,opto_stim)
 % was closed
 
 % Set parameters
-runningBefore=[0]; % Set this to 1 if you want to select trials where animal was running before opto stim 
+runningBefore=[0 1]; % Set this to 1 if you want to select trials where animal was running before opto stim 
 % Set runningBefore to [0 1] if don't care whether animal was running prior
 % to opto stim
-runningAfter=[0]; % Set this to 1 if you want to select trials where animal was stationary prior to opto stim
+runningAfter=[0 1]; % Set this to 1 if you want to select trials where animal was stationary prior to opto stim
 % Set runningAfter to [0 1] if don't care whether animal was running after
 % opto stim
-opto_stim_thresh=0.5; % Threshold above which opto stim on (opto stim should now range between 0 and 1)
+opto_stim_thresh=0.75; % Threshold above which opto stim on 
 running_thresh=0.1; % Threshold for behavior above which animal is considered to be running
 matchAfterWindowToBeforeWindow=1; % if 1, will match duration of window after opto stim to consider 
 % whether mouse was running to duration of window before opto stim;
@@ -27,7 +27,6 @@ firstOptoStim=find(opto_stim>opto_stim_thresh,1,'first');
 beforeInds=1:firstOptoStim-1;
 
 % Find time points after opto stim
-firstOptoStim=find(opto_stim>opto_stim_thresh,1,'last');
 if matchAfterWindowToBeforeWindow==1
     afterInds=firstOptoStim:firstOptoStim+length(beforeInds)-1;
 else

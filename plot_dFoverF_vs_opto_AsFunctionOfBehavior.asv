@@ -80,13 +80,12 @@ plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resa
 
 % Find trials with desired behavior profile
 profile=chooseBehaviorProfile(trialByTrialBeh,avOpto);
+display(sum(profile)); % number of trials in displayed averages
 
 % Find trials with desired opto stim type
-i=7; 
+i=4; 
 typeNum=optoMapping{i,2};
 profile=(profile==1) & ismember(optoStimTypes,typeNum);
-disp('number of trials in average');
-display(sum(profile)); % number of trials in displayed averages
 % Plot this opto stim
 figure();
 realOpto=optoMapping{i,1};
