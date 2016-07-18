@@ -16,6 +16,11 @@ if ~isempty(readin_data)
     optoStimTypes=readin_data.optoStimTypes;
     optoMapping=readin_data.optoMapping;
     opto_shutterTimesRemoved=readin_data.opto_shutterTimesRemoved;
+    if isfield(readin_data,'useComponents')
+        useComponents=readin_data.useComponents;
+    else
+        useComponents=[];
+    end
 else
     % Read in opto stim data
     % If shutter data associated with acq_obj has already been saved, load it
@@ -47,8 +52,14 @@ end
 
 % Concatenate opto stim across trials to match continuous dFoverF traces
 opto_stim=[];
+optoStim_times=[];
+maxTime=0;
+samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
 for i=1:length(opto_shutterTimesRemoved)
     opto_stim=[opto_stim opto_shutterTimesRemoved{i}];
+    newTimes=maxTime+[0:1/samplingRate:(1/samplingRate)*length(opto_shutterTimesRemoved{i})-(1/samplingRate)];
+    optoStim_times=[optoStim_times newTimes];
+    maxTime=max(newTimes)+1/samplingRate;
 end
 
 % Concatenate behavior across trials to match continuous dFoverF traces
@@ -69,38 +80,53 @@ if length(beh)>length(1:T)
     ds=floor(length(beh)/length(1:T));
     beh_resample=beh(1:ds:end);
     beh_resample=beh_resample(1:length(1:T));
+    times_resample=optoStim_times(1:ds:end);
+    times_resample=times_resample(1:length(1:T));
 elseif length(1:T)>length(beh)
     beh_resample=interp(beh,ceil(length(1:T)/length(beh)));
     beh_resample=beh_resample(1:length(1:T));
+    times_resample=interp(optoStim_times,ceil(length(1:T)/length(optoStim_times)));
+    times_resample=times_resample(1:length(1:T));
 end
 
 % Plot dFoverF GUI with opto data
-plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample/5,beh_resample);
+plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample/5,beh_resample,times_resample);
 
 % Get average opto-triggered responses
-[optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(opto_stim_resample,C_df,beh_resample,optoStimTypes);
+[optoTriggeredResponses,avOpto,trialByTrialBeh,trialByTrialTimes]=getOptoResponseAcrossCells(opto_stim_resample,C_df,beh_resample,times_resample);
 
 % Find trials with desired behavior profile
 profile=chooseBehaviorProfile(trialByTrialBeh,avOpto);
 
 % Find trials with desired opto stim type
-i=10; 
-typeNum=optoMapping{i,2};
-profile=(profile==1) & ismember(optoStimTypes,typeNum);
-disp('number of trials in average');
-display(sum(profile)); % number of trials in displayed averages
-% Plot this opto stim
-figure();
-realOpto=optoMapping{i,1};
-samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
-times=0:1/samplingRate:(1/samplingRate)*length(realOpto)-(1/samplingRate);
-plot(times,realOpto);
-title('Opto Stim Type Selected for Average');
+optoProfile=chooseOptoProfile(optoMapping,optoStimTypes,acq_obj);
 
+% Combine behavioral and opto trial types
+profile=(profile==1) & (optoProfile==1);
 
 % Plot GUI with average opto-triggered responses from trials matching
 % behavior profile
-plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,takeTrialsForEachCell(optoTriggeredResponses,profile),avOpto,nanmean(trialByTrialBeh(profile,:),1));
+avResponses=takeTrialsForEachCell(optoTriggeredResponses,profile);
+trialByTrialTimes=trialByTrialTimes-repmat(trialByTrialTimes(:,1),1,size(trialByTrialTimes,2));
+times=nanmean(trialByTrialTimes,1);
+plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,avResponses,avOpto,nanmean(trialByTrialBeh(profile,:),1),times);
+
+% Plot average response across all cells
+% Let user choose which cells to include
+if ~isfield(readin_data,'useComponents')
+    useComponents=chooseComponents(C_df);
+end
+% Get average
+cellByCellAv=zeros(length(useComponents),size(avResponses{1},2));
+for i=1:length(useComponents)
+    cellByCellAv(i,:)=nanmean(avResponses{useComponents(i)},1);
+end
+figure();
+hax=axes();
+plotWStderr(hax,times,cellByCellAv,'k');
+title('Average and Std Err across Cells');
+    
+    
 
 % % Plot distribution of dF over F values AFTER opto stim as function of dF
 % % over F before opto stim
@@ -147,23 +173,24 @@ end
 
 end
 
-function [optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(opto_stim,C_df,beh,optoStimTypes)
+function [optoTriggeredResponses,avOpto,trialByTrialBeh,trialByTrialTimes]=getOptoResponseAcrossCells(opto_stim,C_df,beh,times)
 
 optoTriggeredResponses=cell(1,size(C_df,1));
 allOpto=nan(size(C_df,1),length(opto_stim));
 for i=1:size(C_df,1)
     % Consider each neuron's trace
-    [optoTriggeredResponses{i},acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df(i,:),optoStimTypes);
+    [optoTriggeredResponses{i},acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df(i,:));
     avOpto=nanmean(acrossTrialsOpto,1);
     allOpto(i,1:length(avOpto))=avOpto;
 end
 trialByTrialBeh=optoTriggeredResponse(opto_stim,beh);
+trialByTrialTimes=optoTriggeredResponse(opto_stim,times);
 avOpto=nanmean(allOpto,1);
 avOpto=avOpto(~isnan(avOpto));
 
 end
 
-function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df,optoStimTypes)
+function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
 baseInds=10; % number of indices to take as baseline
@@ -234,7 +261,7 @@ newSignal(isHigh>0)=isHigh(isHigh>0);
 
 end
 
-function plot_avOptoTriggered_components_GUI(Y,A,C,b,f,Cn,options,acrossTrials,opto,beh)
+function plot_avOptoTriggered_components_GUI(Y,A,C,b,f,Cn,options,acrossTrials,opto,beh,times)
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
@@ -378,20 +405,21 @@ plot_component(1)
         if i <= nr
 %             plot(1:T,Y_r(i,:)/Df(i),'linewidth',2); hold all; 
             currAv=acrossTrials{i};
-            plot(1:size(currAv,2),nanmean(currAv,1),'linewidth',2,'Color','r');
+            plot(times,nanmean(currAv,1),'linewidth',2,'Color','r');
             hold all;
 %             Overlay opto stim times
-            plot(1:size(currAv,2),(opto./max(opto))*max(nanmean(currAv,1)),'linewidth',2);
-            plot(1:length(beh),beh,'linewidth',1);
+            plot(times,(opto./max(opto))*max(nanmean(currAv,1)),'linewidth',2);
+            plot(times,beh,'linewidth',1);
             if plot_df
                 title(sprintf('Component %i (calcium DF/F value)',i),'fontsize',16,'fontweight','bold');
             else
                 title(sprintf('Component %i (calcium raw value)',i),'fontsize',16,'fontweight','bold');
             end
             leg = legend('Inferred','Opto Stim','Angular Velocity');
-            set(leg,'FontSize',14,'FontWeight','bold');
-            plot(1:size(currAv,2),nanmean(currAv,1)+nanstd(currAv,[],1)./sqrt(size(currAv,1)),'linewidth',1,'Color','r');
-            plot(1:size(currAv,2),nanmean(currAv,1)-nanstd(currAv,[],1)./sqrt(size(currAv,1)),'linewidth',1,'Color','r');
+            set(leg,'FontSize',14,'FontWeight','bold'); 
+            plot(times,nanmean(currAv,1)+nanstd(currAv,[],1)./sqrt(size(currAv,1)),'linewidth',1,'Color','r');
+            plot(times,nanmean(currAv,1)-nanstd(currAv,[],1)./sqrt(size(currAv,1)),'linewidth',1,'Color','r');
+            xlabel('Time (s)');
             drawnow;
             hold off;
             if make_gif
@@ -439,7 +467,7 @@ plot_component(1)
     end
 end
 
-function plot_components_GUI_withopto_andBeh(Y,A,C,b,f,Cn,options,opto_stim,beh_resample)
+function plot_components_GUI_withopto_andBeh(Y,A,C,b,f,Cn,options,opto_stim,beh_resample,times)
 defoptions = CNMFSetParms;
 if nargin < 7 || isempty(options); options = []; end
 if ~isfield(options,'d1') || isempty(options.d1); d1 = input('What is the total number of rows? \n'); else d1 = options.d1; end          % # of rows
@@ -581,11 +609,12 @@ plot_component(1)
         end
         subplot(3,2,[2,4,6]);
         if i <= nr
-            plot(1:T,Y_r(i,:)/Df(i),'linewidth',2); 
+            plot(times,Y_r(i,:)/Df(i),'linewidth',2); 
             hold all;
-            plot(1:T,C(i,:)/Df(i),'linewidth',2);
-            plot(1:T,beh_resample,'linewidth',1);
-            plot(1:T,opto_stim,'linewidth',2);
+            plot(times,C(i,:)/Df(i),'linewidth',2);
+            plot(times,beh_resample,'linewidth',1);
+            plot(times,opto_stim,'linewidth',2);
+            xlabel('Time (s)');
             % Overlay opto stim times
             if plot_df
                 title(sprintf('Component %i (calcium DF/F value)',i),'fontsize',16,'fontweight','bold');
