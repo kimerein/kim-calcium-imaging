@@ -19,13 +19,11 @@ times=0:1/samplingRate:(1/samplingRate)*size(shutterData,2)-(1/samplingRate);
 
 % Load in opto data
 optoData=findPhysData(obj,movieOrder,nameOptoCommand);
-disp('inside here');
 
 % Create a mapping that specifies which opto stim types were given in this
 % experiment (i.e., are present in the current data set), and map these
 % opto stim types to integer values
 [optoMapping,groups]=createOptoMapping(optoData);
-disp('inside here2')
 
 % Remove from opto data time points when imaging shutter is closed 
 % Note that this will remove voltage commands of opto stimuli from the
@@ -38,7 +36,6 @@ for i=1:size(optoData,1)
     % imaging acquisition for trial
     opto_shutterTimesRemoved{i}=fixTrialToMatchImaging(obj,shuttered_opto,shuttered_times);
 end
-disp('inside here3');
 
 end
 

@@ -34,7 +34,9 @@ else
         end
     end
     [opto_shutterTimesRemoved,optoMapping,optoStimTypes]=loadOptoData(acq_obj,nameOptoCommand,shutterData);
-    disp('here');
+    samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
+    times=0:1/samplingRate:(1/samplingRate)*length(optoMapping{1,1})-(1/samplingRate);
+    [optoMapping,optoStimTypes]=groupOptoStimsGUI(optoMapping,optoStimTypes,times); % User decides how to group different opto stims for analysis
     beh_shutterTimesRemoved=loadGenericPhysData(acq_obj,nameBehaviorCommand,shutterData);
     % Time points when movie was shuttered have now been removed from opto data
     save([saveDir '\beh_shutterTimesRemoved.mat'],'beh_shutterTimesRemoved');
@@ -82,7 +84,7 @@ plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resa
 profile=chooseBehaviorProfile(trialByTrialBeh,avOpto);
 
 % Find trials with desired opto stim type
-i=7; 
+i=10; 
 typeNum=optoMapping{i,2};
 profile=(profile==1) & ismember(optoStimTypes,typeNum);
 disp('number of trials in average');
