@@ -101,16 +101,13 @@ if savePartialProgress==1 && ~isempty(saveDir)
     if ~exist([saveDir '\partwayData'],'dir')
         mkdir([saveDir '\partwayData']);
     end
-    save([saveDir '\partwayData\trialByTrialBeh.mat','trialByTrialBeh']);
-    save([saveDir '\partwayData\avOpto.mat','avOpto']);
-    save([saveDir '\partwayData\optoMapping.mat','optoMapping']);
-    save([saveDir '\partwayData\optoStimTypes.mat','optoStimTypes']);
-    save([saveDir '\partwayData\acq_obj.mat','acq_obj']);
-    save([saveDir '\partwayData\optoTriggeredResponses.mat','optoTriggeredResponses']);
-    save([saveDir '\partwayData\trialByTrialTimes.mat','trialByTrialTimes']);
-    save([saveDir '\partwayData\acq_obj.mat','acq_obj']);
-    save([saveDir '\partwayData\acq_obj.mat','acq_obj']);
-    save([saveDir '\partwayData\acq_obj.mat','acq_obj']);
+    save([saveDir '\partwayData\trialByTrialBeh.mat'],'trialByTrialBeh');
+    save([saveDir '\partwayData\avOpto.mat'],'avOpto');
+    save([saveDir '\partwayData\optoMapping.mat'],'optoMapping');
+    save([saveDir '\partwayData\optoStimTypes.mat'],'optoStimTypes');
+    save([saveDir '\partwayData\acq_obj.mat'],'acq_obj');
+    save([saveDir '\partwayData\optoTriggeredResponses.mat'],'optoTriggeredResponses');
+    save([saveDir '\partwayData\trialByTrialTimes.mat'],'trialByTrialTimes');
     if isfield(readin_data,'useComponents')
         save([saveDir '\partwayData\useComponents.mat','useComponents']);
     end 
