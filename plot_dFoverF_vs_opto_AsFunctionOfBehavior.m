@@ -90,7 +90,7 @@ elseif length(1:T)>length(beh)
 end
 
 % Plot dFoverF GUI with opto data
-plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample/5,beh_resample,times_resample);
+% plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample/5,beh_resample,times_resample);
 
 % Get average opto-triggered responses
 [optoTriggeredResponses,avOpto,trialByTrialBeh,trialByTrialTimes]=getOptoResponseAcrossCells(opto_stim_resample,C_df,beh_resample,times_resample);
@@ -127,7 +127,7 @@ profile=(profile==1) & (optoProfile==1);
 avResponses=takeTrialsForEachCell(optoTriggeredResponses,profile);
 trialByTrialTimes=trialByTrialTimes-repmat(trialByTrialTimes(:,1),1,size(trialByTrialTimes,2));
 times=nanmean(trialByTrialTimes,1);
-plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,avResponses,avOpto,nanmean(trialByTrialBeh(profile,:),1),times);
+% plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,avResponses,avOpto,nanmean(trialByTrialBeh(profile,:),1),times);
 
 % Plot average response across all cells
 % Let user choose which cells to include
@@ -178,7 +178,7 @@ function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim
 % C_df is deltaFoverF trace from one neuron (vector)
 
 baseInds=10; % number of indices to take as baseline
-baseSubtract=1; % base-subtract traces if yes
+baseSubtract=0; % base-subtract traces if yes
 
 [~,pklocs]=findpeaks(opto_stim);
 indsBetweenOpto=mode(diff(pklocs));
