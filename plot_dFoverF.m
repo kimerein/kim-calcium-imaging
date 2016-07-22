@@ -1,8 +1,8 @@
-function plot_dFoverF_vs_opto_AsFunctionOfBehavior(C_df,acq_obj,nameOptoCommand,Yr,A_or,C_or,b2,f2,Cn,options,nameBehaviorCommand,saveDir,readin_data)
+function plot_dFoverF(C_df,acq_obj,nameOptoCommand,Yr,A_or,C_or,b2,f2,Cn,options,nameBehaviorCommand,saveDir,readin_data)
 % C_df is deltaF over F in the form of a matrix where rows are neurons and
 % columns are time points
 % Last row of C_df is background
-% acq_ojb is Acquisition2P object from Harvey lab motion correction
+% acq_obj is Acquisition2P object from Harvey lab motion correction
 % associated with this data set
 % nameOptoCommand is string giving name associated with files containing
 % opto stim data (e.g., 'Opto_Stim')
@@ -50,66 +50,41 @@ else
     save([saveDir '\opto_shutterTimesRemoved.mat'],'opto_shutterTimesRemoved');
 end
 
-% Concatenate opto stim across trials to match continuous dFoverF traces
-opto_stim=[];
-optoStim_times=[];
-maxTime=0;
-samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
-for i=1:length(opto_shutterTimesRemoved)
-    opto_stim=[opto_stim opto_shutterTimesRemoved{i}];
-    newTimes=maxTime+[0:1/samplingRate:(1/samplingRate)*length(opto_shutterTimesRemoved{i})-(1/samplingRate)];
-    optoStim_times=[optoStim_times newTimes];
-    maxTime=max(newTimes)+1/samplingRate;
-end
-
-% Concatenate behavior across trials to match continuous dFoverF traces
-% Take derivative of encoder position to get angular velocity as a function
-% of time
-beh=[];
+% Now compare opto stim to dFoverF
+% Use saved data (from motion correction) about which frames were removed
+% from movies (when shutter on) to align opto, behavior and Ca2+ traces
+[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,C_df,acq_obj);
 for i=1:length(beh_shutterTimesRemoved)
     vel=angular_velocity(beh_shutterTimesRemoved{i});
     vel=vel';
-    beh=[beh vel*1000 vel(end)*1000]; % Pad at end so length of velocity vector matches length of position vector
+    vel=[vel*1000 vel(end)*1000]; % Pad at end so length of velocity vector matches length of position vector
+    beh_shutterTimesRemoved{i}=vel;
 end
+[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,C_df,acq_obj);
 
-% Now compare opto stim to dFoverF
-T = size(C_or,2); % 1:T is length of dFoverF
-% Force opto_stim to match length of dFoverF
-opto_stim_resample=putDeltasIntoResample(opto_stim,length(1:T),0.5);
-if length(beh)>length(1:T)
-    ds=floor(length(beh)/length(1:T));
-    beh_resample=beh(1:ds:end);
-    beh_resample=beh_resample(1:length(1:T));
-    times_resample=optoStim_times(1:ds:end);
-    times_resample=times_resample(1:length(1:T));
-elseif length(1:T)>length(beh)
-    beh_resample=interp(beh,ceil(length(1:T)/length(beh)));
-    beh_resample=beh_resample(1:length(1:T));
-    times_resample=interp(optoStim_times,ceil(length(1:T)/length(optoStim_times)));
-    times_resample=times_resample(1:length(1:T));
-end
+frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
+times=0:frameDuration:(size(C_df,2)-1)*frameDuration;
 
 % Plot dFoverF GUI with opto data
-plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim_resample/5,beh_resample,times_resample);
+plot_components_GUI_withopto_andBeh(Yr,A_or,C_or,b2,f2,Cn,options,opto_stim,beh,times);
 
 % Get average opto-triggered responses
-[optoTriggeredResponses,avOpto,trialByTrialBeh,trialByTrialTimes]=getOptoResponseAcrossCells(opto_stim_resample,C_df,beh_resample,times_resample);
+[optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength);
 
 % Save progress to saveDir
 savePartialProgress=1; % if savePartialProgress equals 1, save variables at this stage to saveDir
 if savePartialProgress==1 && ~isempty(saveDir)
-    if ~exist([saveDir '\partwayData'],'dir')
-        mkdir([saveDir '\partwayData']);
+    if ~exist([saveDir '\partwayData_moviematched'],'dir')
+        mkdir([saveDir '\partwayData_moviematched']);
     end
-    save([saveDir '\partwayData\trialByTrialBeh.mat'],'trialByTrialBeh');
-    save([saveDir '\partwayData\avOpto.mat'],'avOpto');
-    save([saveDir '\partwayData\optoMapping.mat'],'optoMapping');
-    save([saveDir '\partwayData\optoStimTypes.mat'],'optoStimTypes');
-    save([saveDir '\partwayData\acq_obj.mat'],'acq_obj');
-    save([saveDir '\partwayData\optoTriggeredResponses.mat'],'optoTriggeredResponses');
-    save([saveDir '\partwayData\trialByTrialTimes.mat'],'trialByTrialTimes');
+    save([saveDir '\partwayData_moviematched\trialByTrialBeh.mat'],'trialByTrialBeh');
+    save([saveDir '\partwayData_moviematched\avOpto.mat'],'avOpto');
+    save([saveDir '\partwayData_moviematched\optoMapping.mat'],'optoMapping');
+    save([saveDir '\partwayData_moviematched\optoStimTypes.mat'],'optoStimTypes');
+    save([saveDir '\partwayData_moviematched\acq_obj.mat'],'acq_obj');
+    save([saveDir '\partwayData_moviematched\optoTriggeredResponses.mat'],'optoTriggeredResponses');
     if isfield(readin_data,'useComponents')
-        save([saveDir '\partwayData\useComponents.mat'],'useComponents');
+        save([saveDir '\partwayData_moviematched\useComponents.mat'],'useComponents');
     end 
 end
 
@@ -125,8 +100,6 @@ profile=(profile==1) & (optoProfile==1);
 % Plot GUI with average opto-triggered responses from trials matching
 % behavior profile
 avResponses=takeTrialsForEachCell(optoTriggeredResponses,profile);
-trialByTrialTimes=trialByTrialTimes-repmat(trialByTrialTimes(:,1),1,size(trialByTrialTimes,2));
-times=nanmean(trialByTrialTimes,1);
 plot_avOptoTriggered_components_GUI(Yr,A_or,C_or,b2,f2,Cn,options,avResponses,avOpto,nanmean(trialByTrialBeh(profile,:),1),times);
 
 % Plot average response across all cells
@@ -157,18 +130,21 @@ end
 
 end
 
-function [optoTriggeredResponses,avOpto,trialByTrialBeh,trialByTrialTimes]=getOptoResponseAcrossCells(opto_stim,C_df,beh,times)
+function [optoTriggeredResponses,avOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength)
 
 optoTriggeredResponses=cell(1,size(C_df,1));
-allOpto=nan(size(C_df,1),length(opto_stim));
+allOpto=nan(size(C_df,1),length(optoMovieLength{1}+10));
 for i=1:size(C_df,1)
     % Consider each neuron's trace
-    [optoTriggeredResponses{i},acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df(i,:));
+    [optoTriggeredResponses{i},acrossTrialsOpto]=optoTriggeredResponse(optoMovieLength,C_df(i,:));
     avOpto=nanmean(acrossTrialsOpto,1);
     allOpto(i,1:length(avOpto))=avOpto;
 end
-trialByTrialBeh=optoTriggeredResponse(opto_stim,beh);
-trialByTrialTimes=optoTriggeredResponse(opto_stim,times);
+beh=[];
+for i=1:length(behMovieLength)
+    beh=[beh behMovieLength{i}];
+end
+trialByTrialBeh=optoTriggeredResponse(optoMovieLength,beh);
 avOpto=nanmean(allOpto,1);
 avOpto=avOpto(~isnan(avOpto));
 
@@ -177,66 +153,30 @@ end
 function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
-d=57;
-acrossTrialsResponse=zeros(floor(length(C_df)/d),d);
-acrossTrialsOpto=zeros(floor(length(C_df)/d),d);
+acrossTrialsResponse=zeros(length(opto_stim),length(opto_stim{1})+10);
+acrossTrialsOpto=zeros(length(opto_stim),length(opto_stim{1})+10);
 j=1;
-for i=1:d:length(C_df)
-    if i+d-1>length(C_df)
-        break
+for i=1:length(opto_stim)
+    currOpto=opto_stim{i};
+    currCa=C_df(j:j+length(currOpto)-1);
+    j=j+length(currOpto);
+    if i==1
+        optoAt=find(currOpto>0,1,'first');
+        baseInds=optoAt-1;
     end
-    acrossTrialsResponse(j,:)=C_df(i:i+d-1);
-    acrossTrialsOpto(j,:)=opto_stim(i:i+d-1);
-    j=j+1;
+    currOptoAt=find(currOpto>0,1,'first');
+    currBaseInds=currOptoAt-1;
+    if currBaseInds<baseInds
+        acrossTrialsResponse(i,:)=[zeros(1,baseInds-currBaseInds) currCa(1:end-(baseInds-currBaseInds))];
+        acrossTrialsOpto(i,:)=[zeros(1,baseInds-currBaseInds) currOpto(1:end-(baseInds-currBaseInds))];
+    elseif currBaseInds>baseInds
+        acrossTrialsResponse(i,:)=[currCa(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
+        acrossTrialsOpto(i,:)=[currOpto(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
+    else
+        acrossTrialsResponse(i,:)=currCa;
+        acrossTrialsOpto(i,:)=currOpto;
+    end
 end
-
-
-
-
-% 
-% baseInds=10; % number of indices to take as baseline
-% baseSubtract=0; % base-subtract traces if yes
-% 
-% [~,pklocs]=findpeaks(opto_stim);
-% indsBetweenOpto=mode(diff(pklocs));
-% acrossTrialsResponse=nan(length(pklocs),indsBetweenOpto);
-% acrossTrialsOpto=nan(length(pklocs),indsBetweenOpto);
-% for i=1:length(pklocs)
-%     if pklocs(i)-baseInds<1
-%         temp=C_df(1:pklocs(i)+indsBetweenOpto-1);
-%         if baseSubtract==1
-%             temp=temp-nanmean(C_df(1:pklocs(i)-1));
-%         end
-%         acrossTrialsResponse(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
-%     else
-%         if pklocs(i)+indsBetweenOpto-1>length(C_df)
-%             temp=C_df(pklocs(i)-baseInds:end);
-%             if baseSubtract==1
-%                 temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
-%             end
-%         else
-%             temp=C_df(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
-%             if baseSubtract==1
-%                 temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
-%             end
-%         end
-%         acrossTrialsResponse(i,1:length(temp))=temp;
-%     end
-% end
-% 
-% for i=1:length(pklocs)
-%     if pklocs(i)-baseInds<1
-%         temp=opto_stim(1:pklocs(i)+indsBetweenOpto-1);
-%         acrossTrialsOpto(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
-%     else
-%         if pklocs(i)+indsBetweenOpto-1>length(opto_stim)
-%             temp=opto_stim(pklocs(i)-baseInds:end);
-%         else
-%             temp=opto_stim(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
-%         end
-%         acrossTrialsOpto(i,1:length(temp))=temp;
-%     end
-% end
     
 end
 

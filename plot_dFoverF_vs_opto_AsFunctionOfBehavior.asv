@@ -177,66 +177,58 @@ end
 function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
-d=57;
-acrossTrialsResponse=zeros(floor(length(C_df)/d),d);
-acrossTrialsOpto=zeros(floor(length(C_df)/d),d);
-j=1;
-for i=1:d:length(C_df)
-    if i+d-1>length(C_df)
-        break
+acrossTrialsResponse=nan(floor(length(C_df)/61),61);
+acrossTrialsOpto=nan(floor(length(C_df)/61),61);
+for i=1:length(C_df)
+    acrossTrials
+
+
+
+
+
+baseInds=10; % number of indices to take as baseline
+baseSubtract=0; % base-subtract traces if yes
+
+[~,pklocs]=findpeaks(opto_stim);
+indsBetweenOpto=mode(diff(pklocs));
+acrossTrialsResponse=nan(length(pklocs),indsBetweenOpto);
+acrossTrialsOpto=nan(length(pklocs),indsBetweenOpto);
+for i=1:length(pklocs)
+    if pklocs(i)-baseInds<1
+        temp=C_df(1:pklocs(i)+indsBetweenOpto-1);
+        if baseSubtract==1
+            temp=temp-nanmean(C_df(1:pklocs(i)-1));
+        end
+        acrossTrialsResponse(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
+    else
+        if pklocs(i)+indsBetweenOpto-1>length(C_df)
+            temp=C_df(pklocs(i)-baseInds:end);
+            if baseSubtract==1
+                temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
+            end
+        else
+            temp=C_df(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
+            if baseSubtract==1
+                temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
+            end
+        end
+        acrossTrialsResponse(i,1:length(temp))=temp;
     end
-    acrossTrialsResponse(j,:)=C_df(i:i+d-1);
-    acrossTrialsOpto(j,:)=opto_stim(i:i+d-1);
-    j=j+1;
 end
 
-
-
-
-% 
-% baseInds=10; % number of indices to take as baseline
-% baseSubtract=0; % base-subtract traces if yes
-% 
-% [~,pklocs]=findpeaks(opto_stim);
-% indsBetweenOpto=mode(diff(pklocs));
-% acrossTrialsResponse=nan(length(pklocs),indsBetweenOpto);
-% acrossTrialsOpto=nan(length(pklocs),indsBetweenOpto);
-% for i=1:length(pklocs)
-%     if pklocs(i)-baseInds<1
-%         temp=C_df(1:pklocs(i)+indsBetweenOpto-1);
-%         if baseSubtract==1
-%             temp=temp-nanmean(C_df(1:pklocs(i)-1));
-%         end
-%         acrossTrialsResponse(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
-%     else
-%         if pklocs(i)+indsBetweenOpto-1>length(C_df)
-%             temp=C_df(pklocs(i)-baseInds:end);
-%             if baseSubtract==1
-%                 temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
-%             end
-%         else
-%             temp=C_df(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
-%             if baseSubtract==1
-%                 temp=temp-nanmean(C_df(pklocs(i)-baseInds:pklocs(i)-1));
-%             end
-%         end
-%         acrossTrialsResponse(i,1:length(temp))=temp;
-%     end
-% end
-% 
-% for i=1:length(pklocs)
-%     if pklocs(i)-baseInds<1
-%         temp=opto_stim(1:pklocs(i)+indsBetweenOpto-1);
-%         acrossTrialsOpto(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
-%     else
-%         if pklocs(i)+indsBetweenOpto-1>length(opto_stim)
-%             temp=opto_stim(pklocs(i)-baseInds:end);
-%         else
-%             temp=opto_stim(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
-%         end
-%         acrossTrialsOpto(i,1:length(temp))=temp;
-%     end
-% end
+for i=1:length(pklocs)
+    if pklocs(i)-baseInds<1
+        temp=opto_stim(1:pklocs(i)+indsBetweenOpto-1);
+        acrossTrialsOpto(i,baseInds-(baseInds-pklocs(i))+1:baseInds-(baseInds-pklocs(i))+length(temp))=temp;
+    else
+        if pklocs(i)+indsBetweenOpto-1>length(opto_stim)
+            temp=opto_stim(pklocs(i)-baseInds:end);
+        else
+            temp=opto_stim(pklocs(i)-baseInds:pklocs(i)+indsBetweenOpto-1);
+        end
+        acrossTrialsOpto(i,1:length(temp))=temp;
+    end
+end
     
 end
 

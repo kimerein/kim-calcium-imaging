@@ -46,17 +46,22 @@ behProfiles={{[0]; [0]}; {[1]; [1]}; {[0]; [1]}; {[1]; [0]}; {[0 1]; [0 1]}};
 % no trials
 
 % optProfiles={[9 10 11] ;12 ;8 ;3 ;[13 4]};
-% optProfiles={[1]};
+optProfiles={[1:14]};
 % optProfiles={[9 10 11 12 8 3 13 4]};
 % optProfiles={[1:3 5:12 14]};
-optProfiles={[5 6 14 2 1 7 9 10 11 12 8]; [3 13 4]};
+% optProfiles={[5 6 14 2 1 7 9 10 11 12 8]; [3 13 4]};
 % optProfiles={[5 6 14 2 1 7 9 10 11 12 8 3 13 4]};
 
 trialByTrialTimes=trialByTrialTimes-repmat(trialByTrialTimes(:,1),1,size(trialByTrialTimes,2));
 times=nanmean(trialByTrialTimes,1);
 withinCellAverages=cell(length(behProfiles),length(optProfiles));
 % timewindow in seconds with respect to start of trial
-timewindow=[2 14];
+% timewindow=[2 14];
+% timewindow=[2 8];
+% timewindow=[10 14];
+timewindow=[4 8];
+% baselinewindow=[0 1.5];
+% baselinewindow=[6 7.5];
 baselinewindow=[0 1.5];
 % timewindow=[2 4];
 % timewindow=[2.7 9];
@@ -66,9 +71,13 @@ for i=1:length(behProfiles)
     b=behProfiles{i};
     % Find trials with desired behavior profile
     behOnlyProfile=behaviorProfile(trialByTrialBeh,avOpto,b);
+%     if i==5
+%         behOnlyProfile1=behaviorProfile(trialByTrialBeh,avOpto,{0; 0});
+%         behOnlyProfile2=behaviorProfile(trialByTrialBeh,avOpto,{1; 1});
+%         behOnlyProfile=behOnlyProfile1 | behOnlyProfile2;
+%     end
     
     for j=1:length(optProfiles)
-%         o=optProfiles(j);
         o=optProfiles{j};
         % Find trials with desired opto stim type
         optoOnlyProfile=optoStimProfile(optoMapping,optoStimTypes,acq_obj,o);
@@ -88,11 +97,22 @@ for i=1:length(behProfiles)
         end
         withinCellAverages{i,j}=cellByCellAv;
         
-        if i==2 && j==1
+        if i==5 && j==1
             h=figure();
-            useBaseInds=zeros(size(times));
-            useBaseInds(1:10)=1;
-            [~,yOffsets]=plotComponentHistograms(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1) & times<=timewindow(2),100,0,h,[],'k');
+%             useBaseInds=zeros(size(times));
+%             useBaseInds(1:10)=1;
+            useBaseInds=times>=baselinewindow(1) & times<=baselinewindow(2);
+            [~,yOffsets]=plotComponentHistograms(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1) & times<=timewindow(2),100,0,h,[],'k',times>=baselinewindow(1)+6 & times<=baselinewindow(2)+6,times>=timewindow(1)+6 & times<=timewindow(2)+6);
+            title('Real change after opto stim (black) vs change after shutter (red)');
+%             
+%             h=figure();
+%             useBaseInds=times>=baselinewindow(1)+6 & times<=baselinewindow(2)+6;
+%             [~,yOffsets]=plotComponentHistograms(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1)+6 & times<=timewindow(2)+6,100,0,h,yOffsets,'r');
+%             title('Change after shutter');
+            
+            
+            h=figure();
+            [~,yOffsets]=plotComponentTraces(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1) & times<=timewindow(2),100,0,h,[],'k');
         end
         
         if i==2 && j==1
@@ -107,7 +127,7 @@ for i=1:length(behProfiles)
         end
         
         % Get integral of response over timewindow
-        withinCellIntegrals{i,j}=nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2);
+        withinCellIntegrals{i,j}=nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2)-nanmean(cellByCellAv(:,1:10),2);
         
         % Get p of ranksum
         cellByCellT=zeros(length(useComponents),1);
@@ -115,7 +135,9 @@ for i=1:length(behProfiles)
             currResponse=avResponses{useComponents(k)};
             currIntegrals=nanmean(currResponse(:,times>=timewindow(1) & times<=timewindow(2)),2);
             currBases=nanmean(currResponse(:,1:10),2);
-            [p,h,stats]=ranksum(currIntegrals,currBases);
+%             [p,h,stats]=ranksum(currIntegrals,currBases);
+%             [h,p]=ttest2(currIntegrals,currBases,'Vartype','unequal');
+            [p,h]=signrank(currIntegrals-currBases);
             if isnan(p)
                 cellByCellT(k)=nan;
             elseif p<0.05
@@ -123,28 +145,9 @@ for i=1:length(behProfiles)
             else
                 cellByCellT(k)=nan;
             end
-            withinCellT{i,j}=nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2).*cellByCellT;
+%             withinCellT{i,j}=nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2).*cellByCellT;
+            withinCellT{i,j}=(nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2)-nanmean(cellByCellAv(:,1:10),2)).*cellByCellT;
         end
-        
-%         % Get T statistic of each cell's response
-%         cellByCellT=zeros(length(useComponents),1);
-%         for k=1:length(useComponents)
-%             currResponse=avResponses{useComponents(k)};
-%             currIntegrals=sum(currResponse(:,times>=timewindow(1) & times<=timewindow(2)),2);
-% %             [~,p,ci,stats]=ttest(currIntegrals);
-%             [p,h,stats]=signrank(currIntegrals,0,'method','approximate');
-%             if isnan(p)
-%                 cellByCellT(k)=0;
-% %             elseif p<0.05
-%             elseif p<1
-% %                 cellByCellT(k)=stats.tstat;
-%                 cellByCellT(k)=stats.zval;
-%             else
-%                 cellByCellT(k)=0;
-%             end
-% % %             cellByCellT(k)=p;
-%         end
-%         withinCellT{i,j}=cellByCellT;
     end
 end
 
