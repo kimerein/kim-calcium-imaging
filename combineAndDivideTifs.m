@@ -11,27 +11,15 @@ function combineAndDivideTifs(nSpatialPieces,nPixelsOverlap_x,nPixelsOverlap_y)
 
 [file,pathname]=uigetfile('.tif','Choose which tif files to combine','MultiSelect','on');
 
-try
-    % Assumes all movies are same size
+try 
+    % Movies can be different lengths
     combinedMovie=[];
     for i=1:length(file)
         movie=tiffRead([pathname file{i}],'uint16');
-        if i==1
-            combinedMovie=nan([size(movie,1) size(movie,2) size(movie,3)*length(file)]);
-        end
-        combinedMovie(:,:,(i-1)*size(movie,3)+1:(i-1)*size(movie,3)+size(movie,3))=movie;
+        combinedMovie=cat(3,combinedMovie,movie);
     end
 catch
-    try 
-        % Movies different sizes
-        combinedMovie=[];
-        for i=1:length(file)
-            movie=tiffRead([pathname file{i}],'uint16');
-            combinedMovie=cat(3,combinedMovie,movie);
-        end
-    catch
-        disp('Error in combining .tif files');
-    end
+    disp('Error in combining .tif files');
 end
 
 if ~isempty(combinedMovie)
@@ -48,7 +36,9 @@ if ~isempty(combinedMovie)
         [~,mi]=min(temp);
         nSpatialPieces=segments(mi);
     end
-    if nSpatialPieces>1
+    if nSpatialPieces==1
+        combined{1}=combinedMovie;
+    elseif nSpatialPieces>1
         % Spatially sub-divide tif movie
         dimX=size(combinedMovie,2);
         dimY=size(combinedMovie,1);
