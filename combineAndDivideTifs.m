@@ -14,8 +14,10 @@ function combineAndDivideTifs(nSpatialPieces,nPixelsOverlap_x,nPixelsOverlap_y)
 try 
     % Movies can be different lengths
     combinedMovie=[];
+    disp('Reading in tif files:');
     for i=1:length(file)
-        movie=tiffRead([pathname file{i}],'uint16');
+        disp(i);
+        movie=tiffRead([pathname file{i}],'uint8');
         combinedMovie=cat(3,combinedMovie,movie);
     end
 catch
@@ -143,14 +145,14 @@ if ~isempty(combinedMovie)
     end
     try
         for i=1:length(combined)
-            tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'int16');
+            tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'uint8');
         end
     catch
         % Sometimes, disk access fails due to intermittent
         % network problem. In that case, wait and re-try once:
         pause(60);
         for i=1:length(combined)
-            tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'int16');
+            tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'uint8');
         end
     end
 else
