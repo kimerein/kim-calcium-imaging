@@ -70,6 +70,21 @@ P.p = p;    % restore AR value
 [A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,P,options);
 [C2,f2,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
 
+% extract some useful values
+[A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P); % order components
+K_m = size(C_or,1);
+[C_df,Df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],K_m+1); % extract DF/F values 
+
+nA = sqrt(sum(A_or.^2))';
+[K,~] = size(C_or);
+A_components = A_or/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
+C_components = spdiags(nA,0,K,K)*C_or;
+Yr_rawtrace = (A_components'*Yr- (A_components'*A_components)*C_components - (A_components'*full(b2))*f2) + C_components;
+
+% Raw trace for each component i is then Yr_rawtrace(i,:)/Df(i)
+% Inferred trace for each component i is then C_components(i,:)/Df(i)
+
+
 % output
 fprintf(1,'%6s\n','Yr');
 for i=1:size(Yr,1)
