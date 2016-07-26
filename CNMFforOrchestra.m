@@ -23,7 +23,7 @@ d = d1*d2;                                          % total number of pixels
 
 % Set parameters
 
-K = 50;                                           % number of components to be found
+K = 200;                                           % number of components to be found
 tau = 5;                                          % std of gaussian kernel (size of neuron) 
 p = 1;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.75;                                  % merging threshold
@@ -71,31 +71,33 @@ P.p = p;    % restore AR value
 [C2,f2,P,S2] = update_temporal_components(Yr,A2,b2,Cm,f,P,options);
 
 % extract some useful values
-[A_or,C_or,S_or,P] = order_ROIs(A2,C2,S2,P); % order components
+[Ao,C_or,S_or,P] = order_ROIs(A2,C2,S2,P); % order components
 K_m = size(C_or,1);
-[C_df,Df] = extract_DF_F(Yr,[A_or,b2],[C_or;f2],K_m+1); % extract DF/F values 
+[Cf,Df] = extract_DF_F(Yr,[Ao,b2],[C_or;f2],K_m+1); % extract DF/F values 
 
-nA = sqrt(sum(A_or.^2))';
+nA = sqrt(sum(Ao.^2))';
 [K,~] = size(C_or);
-A_components = A_or/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
+A_components = Ao/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
 C_components = spdiags(nA,0,K,K)*C_or;
-Yr_rawtrace = (A_components'*Yr- (A_components'*A_components)*C_components - (A_components'*full(b2))*f2) + C_components;
+Yk = (A_components'*Yr- (A_components'*A_components)*C_components - (A_components'*full(b2))*f2) + C_components;
 
-% Raw trace for each component i is then Yr_rawtrace(i,:)/Df(i)
-% Inferred trace for each component i is then C_components(i,:)/Df(i)
-
+% Raw trace for each component i is then Yk(i,:)/Df(i)
+% Inferred trace for each component i is then C_components(i,:)/Df(i) or,
+% equivalently, Cf
 
 % output
-fprintf(1,'%6s\n','Yr');
-for i=1:size(Yr,1)
-    fprintf(1,'% 10.1f',Yr(i,:));
-    fprintf(1,'\n');
-end
-fprintf(1,'\n');
 
+% fprintf(1,'%6s\n','Yr');
+% for i=1:size(Yr,1)
+%     fprintf(1,'% 10.1f',Yr(i,:));
+%     fprintf(1,'\n');
+% end
+% fprintf(1,'\n');
+
+b2=b2';
 fprintf(1,'%6s\n','b2');
 for i=1:size(b2,1)
-    fprintf(1,'% 10.4f',b2(i,:));
+    fprintf(1,'% 10.2f',b2(i,:));
     fprintf(1,'\n');
 end
 fprintf(1,'\n');
@@ -110,6 +112,35 @@ fprintf(1,'\n');
 fprintf(1,'%6s\n','Cn');
 for i=1:size(Cn,1)
     fprintf(1,'% 10.4f',Cn(i,:));
+    fprintf(1,'\n');
+end
+fprintf(1,'\n');
+
+fprintf(1,'%6s\n','Yk');
+for i=1:size(Yk,1)
+    fprintf(1,'% 10.2f',Yk(i,:));
+    fprintf(1,'\n');
+end
+fprintf(1,'\n');
+
+fprintf(1,'%6s\n','Cf');
+for i=1:size(Cf,1)
+    fprintf(1,'% 10.4f',Cf(i,:));
+    fprintf(1,'\n');
+end
+fprintf(1,'\n');
+
+fprintf(1,'%6s\n','Df');
+for i=1:size(Df,1)
+    fprintf(1,'% 10.2f',Df(i,:));
+    fprintf(1,'\n');
+end
+fprintf(1,'\n');
+
+Ao=full(Ao');
+fprintf(1,'%6s\n','Ao');
+for i=1:size(Ao,1)
+    fprintf(1,'% 10.4f',Ao(i,:));
     fprintf(1,'\n');
 end
 fprintf(1,'\n');

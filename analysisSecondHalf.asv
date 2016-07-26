@@ -53,13 +53,15 @@ optProfiles={[5 6 14 2 1 7 9 10 11 12 8]; [3 13 4]};
 % optProfiles={[5 6 14 2 1 7 9 10 11 12 8 3 13 4]};
 
 frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
-times=0:frameDuration:(size(acrossTrialsOpto,2)-1)*frameDuration;
+times=0:frameDuration:(size(avResponses{1},2)-1)*frameDuration;
+trialByTrialTimes=trialByTrialTimes-repmat(trialByTrialTimes(:,1),1,size(trialByTrialTimes,2));
+times=nanmean(trialByTrialTimes,1);
 withinCellAverages=cell(length(behProfiles),length(optProfiles));
 % timewindow in seconds with respect to start of trial
 % timewindow=[2 14];
 % timewindow=[2 8];
 % timewindow=[10 14];
-timewindow=[2 6];
+timewindow=[4 8];
 % baselinewindow=[0 1.5];
 % baselinewindow=[6 7.5];
 baselinewindow=[0 1.5];
@@ -70,7 +72,7 @@ withinCellT=cell(length(behProfiles),length(optProfiles));
 for i=1:length(behProfiles)
     b=behProfiles{i};
     % Find trials with desired behavior profile
-    behOnlyProfile=behaviorProfile(trialByTrialBeh,nanmean(acrossTrialsOpto,1),b);
+    behOnlyProfile=behaviorProfile(trialByTrialBeh,avOpto,b);
 %     if i==5
 %         behOnlyProfile1=behaviorProfile(trialByTrialBeh,avOpto,{0; 0});
 %         behOnlyProfile2=behaviorProfile(trialByTrialBeh,avOpto,{1; 1});
@@ -122,7 +124,7 @@ for i=1:length(behProfiles)
             hax=axes();
             plotWStderr(hax,times,cellByCellAv,'k');
             hold on;
-            plot(hax,times,(nanmean(acrossTrialsOpto,1)./max(nanmean(acrossTrialsOpto,1))).*max(nanmean(cellByCellAv,1)),'Color','c');
+            plot(hax,times,(avOpto./max(avOpto)).*max(nanmean(cellByCellAv,1)),'Color','c');
             title('Average and Std Err across Cells');
         end
         
@@ -132,7 +134,7 @@ for i=1:length(behProfiles)
         % Get p of ranksum
         cellByCellT=zeros(length(useComponents),1);
         for k=1:length(useComponents)
-            currResponse=optoTriggeredResponses{useComponents(k)};
+            currResponse=avResponses{useComponents(k)};
             currIntegrals=nanmean(currResponse(:,times>=timewindow(1) & times<=timewindow(2)),2);
             currBases=nanmean(currResponse(:,1:10),2);
 %             [p,h,stats]=ranksum(currIntegrals,currBases);
