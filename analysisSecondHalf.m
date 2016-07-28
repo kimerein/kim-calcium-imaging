@@ -1,7 +1,6 @@
-function out=analysisSecondHalf(loadDir)
+function withinCellResponses=analysisSecondHalf(loadDir)
 
-% Load in data from first half of analysis (see
-% plot_dFoverF_vs_opto_AsFunctionOfBehavior.m)
+% Load in data from first half of analysis
 listing=dir(loadDir);
 isMat=zeros(1,length(listing));
 for i=1:length(listing)
@@ -15,189 +14,132 @@ for i=1:length(listing)
     load([loadDir '\' listing(i).name]);
 end
 
-
-
 % Begin rest of analysis
 
-% Iterate through behavioral profiles
-behProfiles={{[0]; [0]}; {[1]; [1]}; {[0]; [1]}; {[1]; [0]}; {[0 1]; [0 1]}};
-% behProfiles={{[0]; [0 1]}; {[1]; [0 1]}; {[0]; [1]}; {[1]; [0]}; {[0 1]; [0 1]}};
+% Choose behavioral profiles and opto stim types
+[bset,oset,cset]=analysisSettings();
+% Iterate analysis on each combo
 
-% Iterate through opto stim types -- ordered here by group num
-% For example, run groupOptoStimsGUI from command line to see opto stim
-% types and associated group nums (at right)
-% From preliminary (behavioral) analysis, it looks like the ranking
-% of opto stims in terms of behavioral effects is:
-% 250 ms, 1.2 V
-% 20 ms, 3 V
-% 20 ms, 5 V
-% 50 ms, 5 V
-% 100 ms, 5 V
-% 250 ms, 3 V
-% 250 ms, 5 V
-% 4 Hz, 5 V
-% 12 Hz, 5 V
-% 50 Hz, 5 V
-% 1 s, 5 V
-% optProfiles=[5 6 14 2 7 1 9 10 11 12 8 3 13 4];
-% optProfiles={5; 6 ;[14 2] ;[1 7] ;[9 10 11] ;12 ;8 ;3 ;[13 4]};
-% Nonrunning to nonrunning
-% no fx, increase, no fx, no fx, decrease, decrease, no trials, decrease,
-% no trials
-
-% optProfiles={[9 10 11] ;12 ;8 ;3 ;[13 4]};
-% optProfiles={[1:14]};
-% optProfiles={[9 10 11 12 8 3 13 4]};
-% optProfiles={[1:3 5:12 14]};
-optProfiles={[5 6 14 2 1 7 9 10 11 12 8]; [3 13 4]};
-% optProfiles={[5 6 14 2 1 7 9 10 11 12 8 3 13 4]};
-
+behProfiles=bset.profiles(bset.show_profiles==1);
+optProfiles=oset.profiles(oset.show_profiles==1);
+    
+% Times
 frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
 times=0:frameDuration:(size(acrossTrialsOpto,2)-1)*frameDuration;
+
+withinCellResponses=cell(length(behProfiles),length(optProfiles));
 withinCellAverages=cell(length(behProfiles),length(optProfiles));
-% timewindow in seconds with respect to start of trial
-% timewindow=[2 14];
-% timewindow=[2 8];
-% timewindow=[10 14];
-timewindow=[2 6];
-% baselinewindow=[0 1.5];
-% baselinewindow=[6 7.5];
-baselinewindow=[0 1.5];
-% timewindow=[2 4];
-% timewindow=[2.7 9];
-withinCellIntegrals=cell(length(behProfiles),length(optProfiles));
-withinCellT=cell(length(behProfiles),length(optProfiles));
+withinCellChanges=cell(length(behProfiles),length(optProfiles));
+withinCellStats=cell(length(behProfiles),length(optProfiles));
+withinCellPlotOutput=cell(length(behProfiles),length(optProfiles));
+usedProfiles=cell(1,length(behProfiles)*length(optProfiles));
+countProfiles=1;
 for i=1:length(behProfiles)
-    b=behProfiles{i};
-    % Find trials with desired behavior profile
-    behOnlyProfile=behaviorProfile(trialByTrialBeh,nanmean(acrossTrialsOpto,1),b);
-%     if i==5
-%         behOnlyProfile1=behaviorProfile(trialByTrialBeh,avOpto,{0; 0});
-%         behOnlyProfile2=behaviorProfile(trialByTrialBeh,avOpto,{1; 1});
-%         behOnlyProfile=behOnlyProfile1 | behOnlyProfile2;
-%     end
-    
+    % Find trials with desired behavior profile  
+    behOnlyProfile=getBehaviorProfile(trialByTrialBeh,nanmean(acrossTrialsOpto,1)./max(nanmean(acrossTrialsOpto,1)),behProfiles,i);
     for j=1:length(optProfiles)
-        o=optProfiles{j};
         % Find trials with desired opto stim type
-        optoOnlyProfile=optoStimProfile(optoMapping,optoStimTypes,acq_obj,o);
+        optoOnlyProfile=optoStimProfile(optoStimTypes,optProfiles{j});
         % Combine behavioral and opto trial types
         profile=(behOnlyProfile==1) & (optoOnlyProfile==1);
+        usedProfiles{countProfiles}=profile;
+        countProfiles=countProfiles+1;
+        % Get response for each cell over trials matching profile
+        responses=takeTrialsForEachCell(optoTriggeredResponses,profile);
+        withinCellResponses{i,j}=responses(useComponents);
+        
+        % Get average response across all cells
         if sum(profile)==0
+            % No trials match this profile
             cellByCellAv=zeros(length(useComponents),size(optoTriggeredResponses{1},2));
         else
-            % Get average response for each cell
-            avResponses=takeTrialsForEachCell(optoTriggeredResponses,profile);
-            
-            % Get average response across all cells
-            cellByCellAv=zeros(length(useComponents),size(avResponses{1},2));
+            cellByCellAv=zeros(length(useComponents),size(responses{1},2));
             for k=1:length(useComponents)
-                cellByCellAv(k,:)=nanmean(avResponses{useComponents(k)},1);
-            end 
+                cellByCellAv(k,:)=nanmean(responses{useComponents(k)},1);
+            end
         end
         withinCellAverages{i,j}=cellByCellAv;
-        
-        if i==5 && j==1
-            h=figure();
-%             useBaseInds=zeros(size(times));
-%             useBaseInds(1:10)=1;
-            useBaseInds=times>=baselinewindow(1) & times<=baselinewindow(2);
-            [~,yOffsets]=plotComponentHistograms(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1) & times<=timewindow(2),100,0,h,[],'k',times>=baselinewindow(1)+6 & times<=baselinewindow(2)+6,times>=timewindow(1)+6 & times<=timewindow(2)+6);
-            title('Real change after opto stim (black) vs change after shutter (red)');
-%             
-%             h=figure();
-%             useBaseInds=times>=baselinewindow(1)+6 & times<=baselinewindow(2)+6;
-%             [~,yOffsets]=plotComponentHistograms(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1)+6 & times<=timewindow(2)+6,100,0,h,yOffsets,'r');
-%             title('Change after shutter');
-            
-            
-            h=figure();
-            [~,yOffsets]=plotComponentTraces(avResponses(useComponents),logical(useBaseInds),times>=timewindow(1) & times<=timewindow(2),100,0,h,[],'k');
+    
+        % Get change in response during timewindow
+        if cset.baseline_subtract==1
+            withinCellChanges{i,j}=nanmean(cellByCellAv(:,times>=cset.timewindow(1) & times<=cset.timewindow(2)),2)-nanmean(cellByCellAv(:,times>=cset.baselinewindow(1) & times<=cset.baselinewindow(2)),2);
+        else
+            withinCellChanges{i,j}=nanmean(cellByCellAv(:,times>=cset.timewindow(1) & times<=cset.timewindow(2)),2);
         end
         
-        if i==2 && j==1
-%             plotComponentHistograms(avResponses(useComponents),1:10,times>=timewindow(1) & times<=timewindow(2),100,0,h,yOffsets,'r');
-            
-            figure();
-            hax=axes();
-            plotWStderr(hax,times,cellByCellAv,'k');
-            hold on;
-            plot(hax,times,(nanmean(acrossTrialsOpto,1)./max(nanmean(acrossTrialsOpto,1))).*max(nanmean(cellByCellAv,1)),'Color','c');
-            title('Average and Std Err across Cells');
-        end
-        
-        % Get integral of response over timewindow
-        withinCellIntegrals{i,j}=nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2)-nanmean(cellByCellAv(:,1:10),2);
-        
-        % Get p of ranksum
-        cellByCellT=zeros(length(useComponents),1);
-        for k=1:length(useComponents)
-            currResponse=optoTriggeredResponses{useComponents(k)};
-            currIntegrals=nanmean(currResponse(:,times>=timewindow(1) & times<=timewindow(2)),2);
-            currBases=nanmean(currResponse(:,1:10),2);
-%             [p,h,stats]=ranksum(currIntegrals,currBases);
-%             [h,p]=ttest2(currIntegrals,currBases,'Vartype','unequal');
-            [p,h]=signrank(currIntegrals-currBases);
-            if isnan(p)
-                cellByCellT(k)=nan;
-            elseif p<0.05
-                cellByCellT(k)=1;
-            else
-                cellByCellT(k)=nan;
+        % Get statistics on change in response during timewindow
+        cellByCellStat=zeros(length(useComponents),1);
+        responses=withinCellResponses{i,j};
+        for k=1:length(responses)
+            currResponse=responses{k};
+            currTimewindow=nanmean(currResponse(:,times>=cset.timewindow(1) & times<=cset.timewindow(2)),2);
+            currBaselinewindow=nanmean(currResponse(:,times>=cset.baselinewindow(1) & times<=cset.baselinewindow(2)),2);
+            switch cset.stats.test_type
+                case 'signrank'
+                    % Paired non-parametric
+                    if cset.stats.vs_baseline==1
+                        if isempty(currTimewindow-currBaselinewindow)
+                            p=nan;
+                        else
+                            p=signrank(currTimewindow-currBaselinewindow);
+                        end
+                    else
+                        currOtherwindow=nanmean(currResponse(:,times>=cset.stats.vs_othertimewindow(1) & times<=cset.stats.vs_othertimewindow(2)),2);
+                        if isempty(currTimewindow-currOtherwindow)
+                            p=nan;
+                        else
+                            p=signrank(currTimewindow-currOtherwindow);
+                        end
+                    end
+                otherwise
+                    error('Unrecognized statistical test type in change.stats.test_type');
             end
-%             withinCellT{i,j}=nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2).*cellByCellT;
-            withinCellT{i,j}=(nanmean(cellByCellAv(:,times>=timewindow(1) & times<=timewindow(2)),2)-nanmean(cellByCellAv(:,1:10),2)).*cellByCellT;
+            cellByCellStat(k)=p;
+        end
+        withinCellStats{i,j}=cellByCellStat;
+        
+        % Output for figure
+        switch cset.display_type
+            case 'pval x amp'
+                withinCellPlotOutput{i,j}=(withinCellStats{i,j}<cset.sigval).*withinCellChanges{i,j};
+            otherwise
+                disp('Using default output: 1 if change during timewindow is significant; 0 otherwise.');
+                withinCellPlotOutput{i,j}=withinCellStats{i,j}<cset.sigval;
         end
     end
 end
 
-% Plot integrals as a function of opto stim
-nonnon=plotCellsByOpto(withinCellT,1);
-title('Non-running to non-running');
-runrun=plotCellsByOpto(withinCellT,2);
-title('Running to running');
-nonrunrun=plotCellsByOpto(withinCellT,3);
-title('Non-running to running');
-runnonrun=plotCellsByOpto(withinCellT,4);
-title('Running to non-running');
-allall=plotCellsByOpto(withinCellT,5);
-title('All to all');
 
-% nonnon=plotCellsByOpto(withinCellIntegrals,1);
-% title('Non-running to non-running');
-% runrun=plotCellsByOpto(withinCellIntegrals,2);
-% title('Running to running');
-% nonrunrun=plotCellsByOpto(withinCellIntegrals,3);
-% title('Non-running to running');
-% runnonrun=plotCellsByOpto(withinCellIntegrals,4);
-% title('Running to non-running');
-% allall=plotCellsByOpto(withinCellIntegrals,5);
-% title('All to all');
-
+% Get figures for each profile type
+rowsOfFig=cell(1,size(withinCellPlotOutput,1));
+alltogether=[];
+for i=1:size(withinCellPlotOutput,1)
+    rowsOfFig{i}=plotCellsByOpto(withinCellPlotOutput,i,1);
+    alltogether=[alltogether; [rowsOfFig{i} zeros(size(rowsOfFig{i},1),1)]];
+end
+alltogether=[alltogether; zeros(1,size(rowsOfFig{i},2)+1)];
 figure();
-pcolor([[nonnon zeros(size(nonnon,1),1)]; [runrun zeros(size(nonnon,1),1)]; [nonrunrun zeros(size(nonnon,1),1)]; [runnonrun zeros(size(nonnon,1),1)]; [allall zeros(size(nonnon,1),1)]; zeros(1,size(allall,2)+1)]);
+pcolor(alltogether);
 colorbar;
 xlabel('Cells');
-ylabel('Opto Stim');
-
-
-
-
+ylabel('Opto Stim and Behavior');
 
 end
 
-function matrix_data=plotCellsByOpto(data,row)
+function matrix_data=plotCellsByOpto(data,row,suppressFig)
 
 matrix_data=zeros(size(data,2),length(data{row,1}));
 for i=1:size(data,2)
     matrix_data(i,:)=data{row,i}';
 end
 
-figure();
-imagesc(matrix_data);
-colorbar;
-xlabel('Cells');
-ylabel('Opto Stim');
+if suppressFig~=1
+    figure();
+    imagesc(matrix_data);
+    colorbar;
+    xlabel('Cells');
+    ylabel('Opto Stim');
+end
 
 end
 
@@ -211,7 +153,95 @@ for i=1:length(responses)
 end
 end
 
+function profile=getBehaviorProfile(behavior,opto_stim,b,i)
+
+% b:            b is cell array specifying how to select behavioral profile
+% behavior:     array containing some metric of behavior where rows are
+%               trials and columns are different time points
+% opto_stim:    vector containing the location of the opto stim
+
+% Get behavioral profile specified by b
+currb=b{i};
+if ~iscell(currb) && ischar(currb)
+    % Combines two other behavioral profiles
+    % Recursively get these other behavioral profiles, then combine
+    startIndex=regexp(currb,'profile');
+    firstProfile=str2num(currb(startIndex(1)+7));
+    secondProfile=str2num(currb(startIndex(2)+7));
+    profile1=getBehaviorProfile(behavior,opto_stim,b{firstProfile});
+    profile2=getBehaviorProfile(behavior,opto_stim,b{secondProfile});
+    % Combine these profiles
+    if ~isempty(regexp(currb,'&','once')) && isempty(regexp(currb,'|','once'))
+        % AND
+        profile=profile1 & profile2;
+    elseif ~isempty(regexp(currb,'|','once')) && isempty(regexp(currb,'&','once'))
+        % OR
+        profile=profile1 | profile2;
+    else
+        error(['behavior.profile{' num2str(i) '} should contain & or | but not both']);
+    end
+elseif ~iscell(currb)
+    error(['Incorrect type or format of behavior.profile{' num2str(i) '}']);
+elseif iscell(currb)
+    if length(currb)==1
+        profile=behaviorProfile(behavior,opto_stim,currb{1});
+    else
+        countSpecs=1;
+        countBool=1;
+        for j=1:length(currb)
+            if iscell(currb{j})
+                behSpecs{countSpecs}=currb{j};
+                countSpecs=countSpecs+1;
+            elseif ischar(currb{j})
+                behBool{countBool}=currb{j};
+                countBool=countBool+1;
+            else
+                error(['Incorrect type or format of behavior.profile{' num2str(i) '}']);
+            end
+        end
+        outProfiles=cell(1,length(behSpecs));
+        for j=1:length(behSpecs)
+            outProfiles{j}=behaviorProfile(behavior,opto_stim,behSpecs{j});
+        end
+        for j=2:length(behSpecs)
+            currBehBool=behBool{j-1};
+            if strcmp(currBehBool,'&')
+                % AND
+                if j==2
+                    profile=outProfiles{j-1} & outProfiles{j};
+                else
+                    profile=profile & outProfiles{j};
+                end
+            elseif strcmp(currBehBool,'|')
+                % OR
+                if j==2
+                    profile=outProfiles{j-1} | outProfiles{j};
+                else
+                    profile=profile | outProfiles{j};
+                end
+            else
+                error(['Incorrect type or format of behavior.profile{' num2str(i) '}']);
+            end
+        end
+    end
+end
+ 
+end
+
 function profile=behaviorProfile(behavior,opto_stim,b)
+
+behSettings=analysisSettings();
+
+switch behSettings.profile_type
+    case 'runningBeforeAndAfterOpto'
+        profile=runningProfile(behavior,opto_stim,b);
+    otherwise
+        error('Unrecognized behavior.profile_type');
+end
+
+end
+
+function profile=runningProfile(behavior,opto_stim,b)
 
 % Pass in behavior data as an array where rows are different trials and
 % columns are different time points in trial
@@ -227,7 +257,7 @@ runningBefore=b{1}; % Set this to 1 if you want to select trials where animal wa
 runningAfter=b{2}; % Set this to 1 if you want to select trials where animal was stationary prior to opto stim
 % Set runningAfter to [0 1] if don't care whether animal was running after
 % opto stim
-opto_stim_thresh=0.75; % Threshold above which opto stim on 
+opto_stim_thresh=0.5; % Threshold above which opto stim on 
 running_thresh=0.1; % Threshold for behavior above which animal is considered to be running
 matchAfterWindowToBeforeWindow=1; % if 1, will match duration of window after opto stim to consider 
 % whether mouse was running to duration of window before opto stim;
@@ -250,26 +280,13 @@ end
 wasRunningBefore=any(abs(behavior(:,beforeInds))>running_thresh,2);
 % Find trials where animal was running after opto stim
 wasRunningAfter=any(abs(behavior(:,afterInds))>running_thresh,2);
-
+ 
 % Return trials that fit behavioral profile specified
 profile=ismember(wasRunningBefore,runningBefore) & ismember(wasRunningAfter,runningAfter);
 end
 
-function profile=optoStimProfile(optoMapping,optoStimTypes,obj,o)
+function profile=optoStimProfile(optoStimTypes,o)
 
-% Eventually make this a GUI
-
-% For now, just specify manually here
-% i=o; 
-% typeNum=optoMapping{i,2};
-% profile=ismember(optoStimTypes,typeNum);
 profile=ismember(optoStimTypes,o);
 
-% % Plot this opto stim
-% figure();
-% realOpto=optoMapping{i,1};
-% samplingRate=obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
-% times=0:1/samplingRate:(1/samplingRate)*length(realOpto)-(1/samplingRate);
-% plot(times,realOpto);
-% title('Opto Stim Type Selected for Average');
 end

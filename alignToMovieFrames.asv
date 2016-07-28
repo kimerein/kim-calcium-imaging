@@ -47,9 +47,12 @@ for i=1:length(opto_shutterTimesRemoved)
     else
         % Force length of opto_shutterTimesRemoved{i} to match length of
         % movie
+        frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
+        movieTimes=0:frameDuration:(length(shutterTimesInMovie{i})-1)*frameDuration;
+        samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
+        physTimes=0:1/samplingRate:(1/samplingRate)*length(opto_shutterTimesRemoved{i})-(1/samplingRate);
         resampleRate=floor(length(opto_shutterTimesRemoved{i})/length(shutterTimesInMovie{i}));
-        temp=decimate(opto_shutterTimesRemoved{i},resampleRate);
-        optoMovie=temp(1:length(shutterTimesInMovie{i}));
+        optoMovie=resampleopto_shutterTimesRemoved{i};
     end
     % Remove shuttered times
     optoMovieLength{i}=optoMovie(s<shutterThresh);

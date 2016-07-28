@@ -53,14 +53,15 @@ end
 % Now compare opto stim to dFoverF
 % Use saved data (from motion correction) about which frames were removed
 % from movies (when shutter on) to align opto, behavior and Ca2+ traces
-[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,C_df,acq_obj);
+[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,C_df,acq_obj,1);
 for i=1:length(beh_shutterTimesRemoved)
+    % Often problematic transients at beginning of
     vel=angular_velocity(beh_shutterTimesRemoved{i});
     vel=vel';
     vel=[vel*1000 vel(end)*1000]; % Pad at end so length of velocity vector matches length of position vector
-    beh_shutterTimesRemoved{i}=vel;
-end
-[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,C_df,acq_obj);
+    beh_shutterTimesRemoved{i}=vel; 
+end 
+[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,C_df,acq_obj,0);
 
 frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
 times=0:frameDuration:(size(C_df,2)-1)*frameDuration;
@@ -135,11 +136,18 @@ end
 
 function [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength)
 
+baselineSubtract=0;
+
 optoTriggeredResponses=cell(1,size(C_df,1));
 acrossTrialsOpto=cell(1,size(C_df,1));
 for i=1:size(C_df,1)
     % Consider each neuron's trace
-    [optoTriggeredResponses{i},acrossTrialsOpto]=optoTriggeredResponse(optoMovieLength,C_df(i,:));
+    [temp,acrossTrialsOpto,baseInds]=optoTriggeredResponse(optoMovieLength,C_df(i,:));
+    if baselineSubtract==1
+        optoTriggeredResponses{i}=temp-repmat(nanmean(temp(:,baseInds),2),1,size(temp,2));
+    else
+        optoTriggeredResponses{i}=temp;
+    end
 end
 beh=[];
 for i=1:length(behMovieLength)
@@ -149,7 +157,7 @@ trialByTrialBeh=optoTriggeredResponse(optoMovieLength,beh);
 
 end
 
-function [acrossTrialsResponse,acrossTrialsOpto]=optoTriggeredResponse(opto_stim,C_df)
+function [acrossTrialsResponse,acrossTrialsOpto,baseInds]=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
 acrossTrialsResponse=zeros(length(opto_stim),length(opto_stim{1})+10);

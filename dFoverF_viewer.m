@@ -53,14 +53,19 @@ end
 % Now compare opto stim to dFoverF
 % Use saved data (from motion correction) about which frames were removed
 % from movies (when shutter on) to align opto, behavior and Ca2+ traces
-[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,C_df,acq_obj);
+[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,C_df,acq_obj,1);
 for i=1:length(beh_shutterTimesRemoved)
-    vel=angular_velocity(beh_shutterTimesRemoved{i});
+    % Often problematic transients at beginning of phys recording, so zero
+    % out
+    temp=beh_shutterTimesRemoved{i};
+    temp(1:500)=temp(500);
+    temp(end-500:end)=temp(end-500);
+    vel=angular_velocity(temp);
     vel=vel';
     vel=[vel*1000 vel(end)*1000]; % Pad at end so length of velocity vector matches length of position vector
-    beh_shutterTimesRemoved{i}=vel;
-end
-[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,C_df,acq_obj);
+    beh_shutterTimesRemoved{i}=vel; 
+end 
+[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,C_df,acq_obj,0);
 
 frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
 times=0:frameDuration:(size(C_df,2)-1)*frameDuration;
@@ -68,7 +73,7 @@ times=0:frameDuration:(size(C_df,2)-1)*frameDuration;
 % Plot dFoverF GUI with opto data
 plot_components_GUI_withopto_andBeh(C_df,Cn,f2,A_or,b2,Yk,Df,options,opto_stim,beh,times);
 
-% Get average opto-triggered responses
+% Get average opto-triggered responses 
 [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength);
 
 % Save progress to saveDir
