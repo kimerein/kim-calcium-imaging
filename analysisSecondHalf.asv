@@ -102,6 +102,7 @@ for i=1:length(behProfiles)
         switch cset.display_type
             case 'pval x amp'
                 withinCellPlotOutput{i,j}=(withinCellStats{i,j}<cset.sigval).*withinCellChanges{i,j};
+                withinCellPlotOutput{i,j}=
             otherwise
                 disp('Using default output: 1 if change during timewindow is significant; 0 otherwise.');
                 withinCellPlotOutput{i,j}=withinCellStats{i,j}<cset.sigval;
@@ -119,6 +120,14 @@ end
 alltogether=[alltogether; zeros(1,size(rowsOfFig{i},2)+1)];
 
 % Sort units for display
+% How to sort units in display
+sorting.by_this_behavior=5; % Refers to indices of behavior.profiles
+sorting.by_this_opto=1; % Refers to indices of optogenetics.profiles
+% Will sort units according to their responses under these behavior and
+% opto conditions
+sorting.order='ascend'; % options are 'ascend' or 'descend'
+sorting.consider_pval=1; % if 1, will group units without a significant change together at the end
+
 doSort=0;
 if bset.show_profiles(sorting.by_this_behavior)~=1
     disp('Please set the behavioral profile used to sort units to display ON');
@@ -137,17 +146,7 @@ if doSort==1
         [~,si]=sort(alltogether(sortRow,1:end-1),2,'descend');
     else
         [~,si]=sort(alltogether(sortRow,1:end-1),2,'ascend');
-    end
-    alltogether(:,1:end-1)=alltogether(:,si);
     
-    % Sort units before returning their activity
-    for i=1:size(withinCellResponses,1)
-        for j=1:size(withinCellResponses,2)
-            temp=withinCellResponses{i,j};
-            withinCellResponses{i,j}=temp(si);
-        end
-    end
-end
 figure();
 pcolor(alltogether);
 colorbar;

@@ -35,11 +35,12 @@ end
 % Which optogenetic stimulus types to consider for analysis
 optogenetics.profiles{1}=[5 6 14 2 1 7 9 10 11 12 8]; % these are indices into optoMapping; combine all these opto stim types
 optogenetics.profiles{2}=[3 13 4]; % these are indices into optoMapping; combine all these opto stim types
+optogenetics.profiles{3}=[1:14]; % these are indices into optoMapping; combine all these opto stim types
 
 % Specify which optogenetic stimulus types to show in analysis
 % Refers to indices of optogenetics.profiles
 % 1 if show; 0 if don't show
-optogenetics.show_profiles=[1 1];
+optogenetics.show_profiles=[1 1 1];
 if length(optogenetics.show_profiles)~=length(optogenetics.profiles)
     error('Length of optogenetics.show_profiles must match length of optogenetics.profiles');
 end
@@ -60,10 +61,18 @@ change.display_type='pval x amp';
 %               the p-val is < change.sigval
 change.sigval=0.05; 
 
+% How to sort units in display
+sorting.by_this_behavior=5; % Refers to indices of behavior.profiles
+sorting.by_this_opto=1; % Refers to indices of optogenetics.profiles
+% Will sort units according to their responses under these behavior and
+% opto conditions
+sorting.order='ascend'; % options are 'ascend' or 'descend'
+
 % Output
 varargout{1}=behavior;
 varargout{2}=optogenetics;
 varargout{3}=change;
+varargout{4}=sorting;
 
 end
 

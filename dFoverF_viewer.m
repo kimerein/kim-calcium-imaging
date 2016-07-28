@@ -112,7 +112,9 @@ optoTriggered_viewer(C_df,Cn,f2,A_or,b2,options,avResponses,nanmean(acrossTrials
 % Let user choose which cells to include
 if ~isfield(readin_data,'useComponents')
     useComponents=chooseComponents(C_df);
+    save([saveDir '\partwayData_moviematched\useComponents.mat'],'useComponents');
 end
+
 % Get average
 cellByCellAv=zeros(length(useComponents),size(avResponses{1},2));
 for i=1:length(useComponents)
