@@ -1,4 +1,4 @@
-function withinCellResponses=analysisSecondHalf(loadDir)
+function [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile]=analysisSecondHalf(loadDir)
 
 % Load in data from first half of analysis
 listing=dir(loadDir);
@@ -32,6 +32,7 @@ withinCellAverages=cell(length(behProfiles),length(optProfiles));
 withinCellChanges=cell(length(behProfiles),length(optProfiles));
 withinCellStats=cell(length(behProfiles),length(optProfiles));
 withinCellPlotOutput=cell(length(behProfiles),length(optProfiles));
+optoForProfile=cell(length(behProfiles),length(optProfiles));
 usedProfiles=cell(1,length(behProfiles)*length(optProfiles));
 countProfiles=1;
 for i=1:length(behProfiles)
@@ -46,6 +47,7 @@ for i=1:length(behProfiles)
         countProfiles=countProfiles+1;
         % Get response for each cell over trials matching profile
         responses=takeTrialsForEachCell(optoTriggeredResponses,profile);
+        optoForProfile{i,j}=acrossTrialsOpto(profile,:);
         withinCellResponses{i,j}=responses(useComponents);
         
         % Get average response across all cells
@@ -145,6 +147,8 @@ if doSort==1
         for j=1:size(withinCellResponses,2)
             temp=withinCellResponses{i,j};
             withinCellResponses{i,j}=temp(si);
+            temp=withinCellStats{i,j};
+            withinCellStats{i,j}=temp(si);
         end
     end
 end

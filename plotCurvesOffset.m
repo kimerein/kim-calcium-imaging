@@ -2,6 +2,8 @@ function [h,yOffsets]=plotCurvesOffset(h,data_x,data_y,sep,c,yOffsets)
 
 if isempty(h)
     h=figure();
+else
+    figure(h);
 end
 
 if isempty(yOffsets)

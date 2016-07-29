@@ -2,9 +2,9 @@
 % traces
 
 %% Set locations to files and directories
-orchestraOutput='\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160610\mouse 1\Best CNMF output\Components 200\cnmf.out';
-acq_obj='\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160610\mouse 1\a2astim.mat';
-saveDir='\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160610\mouse 1\Best CNMF output\Components 200';
+orchestraOutput='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160610\mouse 2 gray and white cement\CNMF output\cnmf.out';
+acq_obj='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160610\mouse 2 gray and white cement\a2a.mat';
+saveDir='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160610\mouse 2 gray and white cement\CNMF output';
 
 %% Read in CNMF output
 [Yr,b2,f2,Cn,Yk,Cf,Df,Ao]=readOrchestraOutput(orchestraOutput);
@@ -38,6 +38,7 @@ obj=a.(names{1});
 dFoverF_viewer(Cf,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',saveDir,[]);
 
 %% Run analysis Step 2
-withinCellResponses=analysisSecondHalf([saveDir '\partwayData_moviematched']);
+[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
 
-%% Run analysis Step 3
+%% Plot opto-triggered Ca2+ traces
+plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);

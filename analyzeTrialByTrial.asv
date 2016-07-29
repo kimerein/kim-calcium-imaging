@@ -1,0 +1,92 @@
+function analyzeTrialByTrial(responses,stats,times)
+
+% Get analysis settings
+[bset,oset,cset,~,dist]=analysisSettings();
+behProfiles=bset.profiles(bset.show_profiles==1);
+optProfiles=oset.profiles(oset.show_profiles==1);
+
+behNum=sum(bset.show_profiles(1:dist.by_this_behavior)==1);
+optoNum=sum(oset.show_profiles(1:dist.by_this_opto)==1);
+
+% Get cell responses matching the specified behavioral and optogenetic
+% conditions
+data=responses{behNum,optoNum};
+stat=stats{behNum,optoNum};
+
+% Plot distribution of effects across trials for each cell with a
+% significant change after opto stim
+data=data(stat<0.05); % Take cells with a significant change
+histgrams.x=cell(1,length(data));
+histgrams.y=cell(1,length(data));
+changesAcrossCells=cell(1,length(data)); 
+allchanges=[];
+if dist.sortTrials.yes==1
+    valAcrossCells=cell(1,length(data)); 
+end
+for i=1:length(data)
+    currData=data{i};
+    % Get changes across trials
+    if cset.baseline_subtract==1
+        changes=nanmean(currData(:,times>=cset.timewindow(1) & times<=cset.timewindow(2)),2)-nanmean(currData(:,times>=cset.baselinewindow(1) & times<=cset.baselinewindow(2)),2);
+    else
+        changes=nanmean(currData(:,times>=cset.timewindow(1) & times<=cset.timewindow(2)),2);
+    end
+    if dist.sortTrials.yes==1
+        valAcrossCells{i}=nanmean(currData(:,times>=dist.sortTrials.by_window(1) & times<=dist.sortTrials.by_window(2)),2);
+    end
+    changesAcrossCells{i}=changes;
+    allchanges=[allchanges; changes];
+end
+
+if dist.sameBins==1
+    mi=min(allchanges);
+    ma=max(allchanges);
+    edges=linspace(mi,ma,dist.nBins+1);
+end
+for i=1:length(changesAcrossCells)
+    changes=changesAcrossCells{i};
+    if dist.sameBins==1
+        [n,x]=hist(changes,edges);
+    else
+        [n,x]=hist(changes,dist.nBins);
+    end
+    if dist.normalize==1
+        areaUnder=sum(n);
+        n=n./areaUnder; % Normalize so that integral of histogram is 1
+    end
+    histgrams.x{i}=x;
+    histgrams.y{i}=n;
+end
+% Plot histograms
+[h,yOffsets]=plotCurvesOffset([],histgrams.x,histgrams.y,0.1,'k',[]);
+title('Distribution of Effects Across Trials -- Each Curve is One Cell');
+xlabel('delta F over F');
+ylabel('Count');
+
+% Plot effects combining cells
+[n,x]=hist(allchanges,dist.nBins);
+figure(); 
+plot(x,n,'Color','k');
+title('Distribution of Effects Across Trials -- Combining All Cells with Sig Effects');
+xlabel('delta F over F');
+ylabel('Count');
+
+% Further sort trials
+if dist.sortTrials.yes==1
+    for i=1:length(valAcrossCells)
+        changes=valAcrossCells{i};
+        if dist.sameBins==1
+            [n,x]=hist(changes,edges);
+        else
+            [n,x]=hist(changes,dist.nBins);
+        end
+        if dist.normalize==1
+            areaUnder=sum(n);
+            n=n./areaUnder; % Normalize so that integral of histogram is 1
+        end
+        histgrams.x{i}=x;
+        histgrams.y{i}=n;
+    end
+    
+dist.sortTrials.by_window=[0 1.5]; % divide trials according to Ca2+ trace during this window
+dist.sortTrials.divide_at='median'; % divide trials at this location; if 'median', will separate trials at the median

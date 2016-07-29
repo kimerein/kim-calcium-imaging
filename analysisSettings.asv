@@ -17,7 +17,7 @@ behavior.profiles{5}={{0; 0},{1; 1},'|'}; % Specify & or | to combine behavioral
 % For example, {{0; 0},{1; 1},{2; 2},{[0 1]; 2},'|','&','|'} will give
 % (([0 before, 0 after] OR [1 before, 1 after]) AND [2 before, 2 after]) OR
 % [0 or 1 before, 2 after]
-behavior.profiles{6}={{[0 1]; [0 1]}};
+behavior.profiles{6}={{[1]; [0 1]}};
 % To further combine behavioral profiles, make behavior.profiles{i} a
 % string specifying which other behavioral profiles to combine
 % For example, behavior.profiles{i}='profile5 & profile6' will combine
@@ -46,9 +46,8 @@ if length(optogenetics.show_profiles)~=length(optogenetics.profiles)
 end
 
 % Change in Ca2+ trace over the course of trial
-change.timewindow=[0.7 6.8]; % in seconds with respect to start of trial
-change.baselinewindow=[0 0.7]; % in seconds with respect to start of trial
-% change.baselinewindow=[6.3 7]; % in seconds with respect to start of trial
+change.timewindow=[2 6]; % in seconds with respect to start of trial
+change.baselinewindow=[0 1.5]; % in seconds with respect to start of trial
 change.baseline_subtract=1; 
 % If baseline_subtract is 1, analysis will subtract mean of Ca2+ trace during baselinewindow from mean during timewindow
 % else analysis will return just the mean of Ca2+ trace during timewindow
@@ -63,14 +62,14 @@ change.display_type='pval x amp';
 change.sigval=0.05; 
 
 % How to sort units in display
-sorting.by_this_behavior=2; % Refers to indices of behavior.profiles
+sorting.by_this_behavior=5; % Refers to indices of behavior.profiles
 sorting.by_this_opto=1; % Refers to indices of optogenetics.profiles
 % Will sort units according to their responses under these behavior and
 % opto conditions
 sorting.order='ascend'; % options are 'ascend' or 'descend'
 
 % Show effect distributions for this condition
-dist.by_this_behavior=5; % Refers to indices of behavior.profiles
+dist.by_this_behavior=1; % Refers to indices of behavior.profiles
 dist.by_this_opto=1; % Refers to indices of optogenetics.profiles
 dist.nBins=1000; % Number of bins to use for histograms of effect distributions
 dist.normalize=0; % if 1, will normalize histograms
@@ -81,7 +80,6 @@ dist.sortTrials.divide_at='median'; % divide trials at this location; if 'median
 
 % Plot Ca2+ traces
 traces.align_to_baseline=1; % if 1, will align traces at baseline (i.e., baseline-subtract)
-% baseline window is change.baselinewindow
 
 % Output
 varargout{1}=behavior;
@@ -89,7 +87,6 @@ varargout{2}=optogenetics;
 varargout{3}=change;
 varargout{4}=sorting;
 varargout{5}=dist;
-varargout{6}=traces;
 
 end
 
