@@ -1,15 +1,8 @@
 function opto_shutterTimesRemoved=loadGenericPhysData(obj,nameOptoCommand,shutterData)
 % obj is Acquisition2P object from Harvey lab motion correction
 
-% Calculate number of movies and arrange processing order so that
-% reference is first
-% This orders phys data to match movie order
 nMovies = length(obj.Movies);
-if isempty(obj.motionRefMovNum)
-    obj.motionRefMovNum = floor(nMovies/2);
-end
 movieOrder = 1:nMovies;
-movieOrder([1 obj.motionRefMovNum]) = [obj.motionRefMovNum 1];
 
 if isempty(shutterData)
     shutterData=findPhysData(obj,movieOrder,obj.sabaMetadata.nameShutterCommand);

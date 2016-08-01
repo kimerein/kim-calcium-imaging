@@ -20,6 +20,10 @@ else
     end
 end
 
+nMovies = length(acq_obj.Movies);
+movieOrder = 1:nMovies;
+movieOrder([1 acq_obj.motionRefMovNum]) = [acq_obj.motionRefMovNum 1];
+
 % For each trial, force length of opto_shutterTimesRemoved to match length
 % of movie
 optoMovieLength=cell(1,length(opto_shutterTimesRemoved));
@@ -53,5 +57,8 @@ for i=1:length(opto_shutterTimesRemoved)
     end
     % Remove shuttered times
     optoMovieLength{i}=optoMovie(s<shutterThresh);
+    if length(optoMovieLength{i})~=acq_obj.correctedMovies.slice.channel.size(i,3)
+        disp('Mismatch between optoMovie length and length of actual movie');
+    end
     opto_stim=[opto_stim optoMovieLength{i}];
 end
