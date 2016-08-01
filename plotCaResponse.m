@@ -42,13 +42,14 @@ end
 
 optoToPlot=nanmean(opto,1);
 optoToPlot=optoToPlot./max(optoToPlot);
-% Plot Ca2+ traces across cells=
+% Plot Ca2+ traces across cells
 figure();
 hax=axes();
 plotWStderr(hax,times,responseIncludingNonsig,'k');
 xlabel('Time (s)');
 ylabel('delta F over F');
 title('Response across all cells');
+xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseIncludingNonsig,1)),'Color','c');
 
 figure();
@@ -57,6 +58,7 @@ plotWStderr(hax,times,responseAcrossAll,'k');
 xlabel('Time (s)');
 ylabel('delta F over F');
 title('Response across all cells with a significant change');
+xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseAcrossAll,1)),'Color','c');
 
 figure();
@@ -65,6 +67,7 @@ plotWStderr(hax,times,responseForIncrease,'r');
 xlabel('Time (s)');
 ylabel('delta F over F');
 title('Response across all cells with a significant increase');
+xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseForIncrease,1)),'Color','c');
 
 figure();
@@ -73,4 +76,5 @@ plotWStderr(hax,times,responseForDecrease,'b');
 xlabel('Time (s)');
 ylabel('delta F over F');
 title('Response across all cells with a significant decrease');
+xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseForDecrease,1)),'Color','c');

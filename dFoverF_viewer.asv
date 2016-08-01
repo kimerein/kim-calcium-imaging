@@ -140,6 +140,8 @@ plot(hax,times,nanmean(acrossTrialsOpto(profile,:),1),'Color','c');
 
 end
 
+function trials=truncat
+
 function outResponses=takeTrialsForEachCell(responses,useTrials)
 
 outResponses=cell(1,length(responses));
@@ -151,7 +153,7 @@ end
 
 end
 
-function [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh,optoAt]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength)
+function [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength)
 
 baselineSubtract=0;
 
@@ -177,9 +179,9 @@ end
 function [acrossTrialsResponse,acrossTrialsOpto,baseInds]=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
+acrossTrialsResponse=zeros(length(opto_stim),length(opto_stim{1})+10);
+acrossTrialsOpto=zeros(length(opto_stim),length(opto_stim{1})+10);
 j=1;
-% acrossTrialsResponse=zeros(length(opto_stim),length(opto_stim{1})+10);
-% acrossTrialsOpto=zeros(length(opto_stim),length(opto_stim{1})+10);
 for i=1:length(opto_stim)
     currOpto=opto_stim{i};
     currCa=C_df(j:j+length(currOpto)-1);
@@ -187,35 +189,30 @@ for i=1:length(opto_stim)
     if i==1
         optoAt=find(currOpto>0,1,'first');
         baseInds=optoAt-1;
-        acrossTrialsResponse=zeros(length(opto_stim),length(currCa));
-        acrossTrialsOpto=zeros(length(opto_stim),length(currCa));
     end
     currOptoAt=find(currOpto>0,1,'first');
     currBaseInds=currOptoAt-1;
     if currBaseInds<baseInds
-%         acrossTrialsResponse(i,:)=[zeros(1,baseInds-currBaseInds) currCa(1:end-(baseInds-currBaseInds))];
-%         acrossTrialsOpto(i,:)=[zeros(1,baseInds-currBaseInds) currOpto(1:end-(baseInds-currBaseInds))];
-        currCa=[zeros(1,baseInds-currBaseInds) currCa(1:end-(baseInds-currBaseInds))];
-        currOpto=[zeros(1,baseInds-currBaseInds) currOpto(1:end-(baseInds-currBaseInds))];
+        acrossTrialsResponse(i,:)=[zeros(1,baseInds-currBaseInds) currCa(1:end-(baseInds-currBaseInds))];
+        acrossTrialsOpto(i,:)=[zeros(1,baseInds-currBaseInds) currOpto(1:end-(baseInds-currBaseInds))];
     elseif currBaseInds>baseInds
-%         acrossTrialsResponse(i,:)=[currCa(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
-%         acrossTrialsOpto(i,:)=[currOpto(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
-        currCa=[currCa(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
-        currOpto=[currOpto(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
-    end
-    if size(acrossTrialsResponse,2)>length(currCa) % This trial is shorter ... fill with nans
-        temp=nan(1,size(acrossTrialsResponse,2));
-        temp(1:length(currCa))=currCa;
-        acrossTrialsResponse(i,:)=temp;
-        temp=nan(1,size(acrossTrialsOpto,2));
-        temp(1:length(currOpto))=currOpto;
-        acrossTrialsOpto(i,:)=temp;
-    elseif length(currCa)>size(acrossTrialsResponse,2) % This trial is longer ... truncate to match other trials' lengths
-        acrossTrialsResponse(i,:)=currCa(1:size(acrossTrialsResponse,2));
-        acrossTrialsOpto(i,:)=currOpto(1:size(acrossTrialsOpto,2));
-    else % Lengths match
-        acrossTrialsResponse(i,:)=currCa;
-        acrossTrialsOpto(i,:)=currOpto;
+        acrossTrialsResponse(i,:)=[currCa(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
+        acrossTrialsOpto(i,:)=[currOpto(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
+    else
+        if size(acrossTrialsResponse,2)>length(currCa) % This trial is shorter ... fill with nans
+            temp=nan(1,size(acrossTrialsResponse,2));
+            temp(1:length(currCa))=currCa;
+            acrossTrialsResponse(i,:)=temp;
+            temp=nan(1,size(acrossTrialsOpto,2));
+            temp(1:length(currOpto))=currOpto;
+            acrossTrialsOpto(i,:)=temp;
+        elseif length(currCa)>size(acrossTrialsResponse,2) % This trial is longer ... truncate to match other trials' lengths
+            acrossTrialsResponse(i,:)=currCa(1:size(acrossTrialsResponse,2));
+            acrossTrialsOpto(i,:)=currOpto(1:size(acrossTrialsOpto,2));
+        else % Lengths match
+            acrossTrialsResponse(i,:)=currCa;
+            acrossTrialsOpto(i,:)=currOpto;
+        end
     end
 end
     

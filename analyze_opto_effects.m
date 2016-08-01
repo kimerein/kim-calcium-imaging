@@ -2,9 +2,9 @@
 % traces
 
 %% Set locations to files and directories
-orchestraOutput='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\for_orchestra\CNMF\20160729\mouse20160609\cnmf.out';
-acq_obj='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160609\obj.mat';
-saveDir='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160609\CNMF output';
+orchestraOutput='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\for_orchestra\CNMF\20160801\cnmf.out';
+acq_obj='\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160608 beware fake opto\obj.mat';
+saveDir='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160608 beware fake opto\CNMF output correct opto';
 
 %% Read in CNMF output
 [Yr,b2,f2,Cn,Yk,Cf,Df,Ao]=readOrchestraOutput(orchestraOutput);

@@ -47,20 +47,14 @@ for i=1:length(opto_shutterTimesRemoved)
             end
         end
     else
-        % Find end of last shutter epoch in movie
+        % Find end of second shutter epoch in movie
         % Put fake opto here
         s=shutterTimesInMovie{i};
-        shutterOff=find(s<shutterThresh);
+        shutterOn=find(s>shutterThresh);
         putOptoHere=length(s);
-        for j=length(shutterOff):-1:1
+        for j=length(s):-1:1
             % Look for time when shutter last closes
-            if shutterOff(j)-1<1
-                % Shutter never closed
-            elseif s(shutterOff(j)-1)>shutterThresh
-                putOptoHere=shutterOff(j);
-                break
-            end
-        end       
+            if shutterOn(j)+1
     end
     if isOpto==1
         if ~isnan(putOptoHere)

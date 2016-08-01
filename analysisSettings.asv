@@ -2,7 +2,7 @@ function varargout=analysisSettings()
 
 % Specify which type of response to use
 response.type='raw'; % 'inferred' from CNMF or 'raw'
-response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
+response.shutter_only=1; % if 1, use shutter only as the stimulus (no opto), else use opto
 
 % Set type of behavior to analyze
 behavior.profile_type='runningBeforeAndAfterOpto';
@@ -60,8 +60,6 @@ change.timewindow=[0.7 6.8]; % in seconds with respect to start of trial
 change.baselinewindow=[0.255 0.7]; % in seconds with respect to start of trial
 % change.timewindow=[6.4 12.4]; % in seconds with respect to start of trial
 % change.baselinewindow=[5.955 6.4]; % in seconds with respect to start of trial
-% change.timewindow=[7.4 13.5]; % in seconds with respect to start of trial
-% change.baselinewindow=[6.955 7.4]; % in seconds with respect to start of trial
 % change.baselinewindow=[6.3 7]; % in seconds with respect to start of trial
 change.baseline_subtract=1; 
 % If baseline_subtract is 1, analysis will subtract mean of Ca2+ trace during baselinewindow from mean during timewindow

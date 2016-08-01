@@ -159,7 +159,12 @@ plot_component(1)
 %                 end
             end
         else
-            plot(times,f2(i-nr,:)); title('Background activity','fontsize',16,'fontweight','bold');
+            plot(times,f2(i-nr,:)); 
+            hold all;
+            plot(times,beh_resample,'linewidth',1);
+            plot(times,opto_stim,'linewidth',2);
+            xlabel('Time (s)');
+            title('Background activity','fontsize',16,'fontweight','bold');
             drawnow;
             if make_gif
                 frame = getframe(fig); %getframe(1);

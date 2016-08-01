@@ -73,6 +73,8 @@ ylabel('Count');
 
 % Further sort trials
 if dist.sortTrials.yes==1
+    allchanges1=[];
+    allchanges2=[];
     histgrams1.x=cell(1,length(valAcrossCells));
     histgrams2.y=cell(1,length(valAcrossCells));
     for i=1:length(valAcrossCells)
@@ -87,6 +89,8 @@ if dist.sortTrials.yes==1
                 changes1=changes(vals>nanmedian(vals));
                 changes2=changes(vals<=nanmedian(vals));
         end
+        allchanges1=[allchanges1; changes1];
+        allchanges2=[allchanges2; changes2];
         if dist.sameBins==1
             [n1,x1]=hist(changes1,edges);
             [n2,x2]=hist(changes2,edges);
@@ -110,6 +114,17 @@ if dist.sortTrials.yes==1
     [~,yOffsets]=plotCurvesOffset(h,histgrams1.x,histgrams1.y,0.1,'b',[]);
     plotCurvesOffset(h,histgrams2.x,histgrams2.y,0.1,'r',yOffsets);
     title('Distribution of Effects Across Trials -- Trials Divided Up');
+    xlabel('delta F over F');
+    ylabel('Count');
+    
+    % Plot effects combining cells
+    [n,x]=hist(allchanges1,dist.nBins);
+    figure();
+    plot(x,n,'Color','b');
+    hold on;
+    [n,x]=hist(allchanges2,dist.nBins);
+    plot(x,n,'Color','r');
+    title('Distribution of Effects Across Trials -- Combining All Cells with Sig Effects');
     xlabel('delta F over F');
     ylabel('Count');
 end

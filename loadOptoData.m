@@ -175,27 +175,34 @@ shutterOffTimes(:,1)=shutterOffTimes(:,1)-frameDuration;
 
 % Remove shuttered time points from otherData
 isShutteredTime=zeros(size(times));
+[~,~,~,~,~,~,resp]=analysisSettings();
 for i=1:size(shutterOffTimes,1)
     isShutteredTime(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))=1;
     if insertOptoDelta==1
-        % If otherData is high during this shuttered time window
-        if any(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
-            timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
-%             % Make first time point after shuttered window high
-%             otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
-            % Make first time point after shuttered window represent which opto
-            % stim was presented
-            otherData(timepointAfterShutter)=group;
-            otherData([1:timepointAfterShutter-1 timepointAfterShutter+1:end])=0;
+        if resp.shutter_only~=1
+            % If otherData is high during this shuttered time window
+            if any(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
+                timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
+                %             % Make first time point after shuttered window high
+                %             otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
+                % Make first time point after shuttered window represent which opto
+                % stim was presented
+                otherData(timepointAfterShutter)=group;
+                otherData([1:timepointAfterShutter-1 timepointAfterShutter+1:end])=0;
+            end
+        else
+            % If otherData is low during this shuttered time window (i.e.,
+            % shutter only, no opto stim) FAKE OPTO
+            if all(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))<opto_on_thresh)
+                timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
+                %             % Make first time point after shuttered window high
+                %             otherData(timepointAfterShutter)=max(otherData);
+                % Make first time point after shuttered window represent which opto
+                % stim was presented
+                otherData(timepointAfterShutter)=group;
+                otherData([1:timepointAfterShutter-1 timepointAfterShutter+1:end])=0;
+            end
         end
-        
-%         % If otherData is low during this shuttered time window (i.e.,
-%         % shutter only, no opto stim)
-%         if all(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))<opto_on_thresh)
-%             timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
-%             % Make first time point after shuttered window high
-%             otherData(timepointAfterShutter)=max(otherData);
-%         end
     end
 end
 otherData=otherData(isShutteredTime==0);
