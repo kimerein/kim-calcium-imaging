@@ -11,16 +11,41 @@ function dFoverF_viewer(C_df,acq_obj,nameOptoCommand,Yk,A_or,Cn,b2,f2,Df,options
 % data
 % Yk,A_or,Cn,b2,f2,Df,options are arguments to plot_components_GUI
 
+getOptoMapping=1;
+getComponents=1;
 if ~isempty(readin_data)
+    if isfield(readin_data,'useComponents')
+        useComponents=readin_data.useComponents;
+        getComponents=0;
+    else
+        useComponents=[];
+        getComponents=1;
+    end
+    if isfield(readin_data,'optoMapping')
+        optoStimTypes=readin_data.optoStimTypes;
+        optoMapping=readin_data.optoMapping;
+        getOptoMapping=0;
+    else
+        optoStimTypes=[];
+        optoMapping=[];
+        getOptoMapping=1;
+    end
+end
+getData=1;
+if ~isempty(readin_data) 
+    if ~isfield(readin_data,'opto_shutterTimesRemoved')
+        getData=1;
+    else
+        getData=0;
+    end
+else
+    getData=1;
+end
+if getData==0
     beh_shutterTimesRemoved=readin_data.beh_shutterTimesRemoved;
     optoStimTypes=readin_data.optoStimTypes;
     optoMapping=readin_data.optoMapping;
-    opto_shutterTimesRemoved=readin_data.opto_shutterTimesRemoved;
-    if isfield(readin_data,'useComponents')
-        useComponents=readin_data.useComponents;
-    else
-        useComponents=[];
-    end
+    opto_shutterTimesRemoved=readin_data.opto_shutterTimesRemoved;    
 else
     % Read in opto stim data
     % If shutter data associated with acq_obj has already been saved, load it
@@ -41,7 +66,10 @@ else
     [opto_shutterTimesRemoved,optoMapping,optoStimTypes]=loadOptoData(acq_obj,nameOptoCommand,shutterData);
     samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
     times=0:1/samplingRate:(1/samplingRate)*length(optoMapping{1,1})-(1/samplingRate);
-    [optoMapping,optoStimTypes]=groupOptoStimsGUI(optoMapping,optoStimTypes,times); % User decides how to group different opto stims for analysis
+    
+    if getOptoMapping==1
+        [optoMapping,optoStimTypes]=groupOptoStimsGUI(optoMapping,optoStimTypes,times); % User decides how to group different opto stims for analysis
+    end
     beh_shutterTimesRemoved=loadGenericPhysData(acq_obj,nameBehaviorCommand,shutterData);
     % Time points when movie was shuttered have now been removed from opto data
     save([saveDir '\beh_shutterTimesRemoved.mat'],'beh_shutterTimesRemoved');

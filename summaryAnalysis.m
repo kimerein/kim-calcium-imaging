@@ -1,15 +1,14 @@
-% Script reads in output of CNMF and analyzes effects of opto stim on Ca2+
-% traces
+function summaryAnalysis(dataDir,saveDir,acq_objDir)
 
-%% Set locations to files and directories
-orchestraOutput='\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Kim\for_orchestra\CNMF\20160801\mouse20160607\cnmf.out';
-acq_obj='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160607\obj.mat';
-saveDir='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160607\CNMF output';
+% Set locations to files and directories
+orchestraOutput=dataDir;
+acq_obj=acq_objDir;
+saveDir=saveDir;
 
-%% Read in CNMF output
+% Read in CNMF output
 [Yr,b2,f2,Cn,Yk,Cf,Df,Ao]=readOrchestraOutput(orchestraOutput);
 
-%% Fill in options used for CNMF
+% Fill in options used for CNMF
 K = 200;                                           % number of components to be found
 tau = 5;                                          % std of gaussian kernel (size of neuron)
 p = 1;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
@@ -29,16 +28,36 @@ options = CNMFSetParms(...
 'gSig',tau...
 );
 
-%% Load Acquisition2P object (output of motion correction)
+% Load Acquisition2P object (output of motion correction)
 a=load(acq_obj);
 names=fieldnames(a);
 obj=a.(names{1});
 
-%% Run analysis Step 1
+
+
+% Iterate through analysis conditions
+
+% Clear counter
+iterateAnalysisSettings([],[],[],[],[],[],[],1);
+
+% First, real opto stim
 dFoverF_viewer(Cf,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',saveDir,[]);
 
-%% Run analysis Step 2
+% Load in saved data
+load([saveDir '\optoMapping.mat']);
+load([saveDir '\optoStimTypes.mat']);
+load([saveDir '\useComponents.mat']);
+readin_data.optoMapping=optoMapping;
+readin_data.optoStimTypes=optoStimTypes;
+readin_data.useComponents=useComponents;
+
+[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,matrixOfEffects]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
+traceOutput=plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);
+
+
+
+% Run analysis Step 2
 [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
 
-%% Plot opto-triggered Ca2+ traces
+% Plot opto-triggered Ca2+ traces
 plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);

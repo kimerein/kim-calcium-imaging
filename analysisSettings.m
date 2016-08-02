@@ -37,20 +37,24 @@ if length(behavior.show_profiles)~=length(behavior.profiles)
 end
 
 % Which optogenetic stimulus types to consider for analysis
-% optogenetics.profiles{1}=[5 6 14 2 1 7 9 10 11 12 8]; % these are indices into optoMapping; combine all these opto stim types
-% optogenetics.profiles{2}=[3 13 4]; 
-% optogenetics.profiles{3}=[1:14]; 
-% optogenetics.profiles{1}=[2 4 6 7 8 11]; % short stims
-% optogenetics.profiles{2}=[1 3 5 9 10 12]; % long stims
-% optogenetics.profiles{3}=[1:12]; % all stims
-optogenetics.profiles{1}=[1]; % short stims
-optogenetics.profiles{2}=[2]; % long stims
-optogenetics.profiles{3}=[1:2]; % all stims
+% these numbers are indices into optoMapping; combine all these opto stim types
+optoStimTypes=[1:14]; % all opto stim types in this expt
+optogenetics.profiles{1}=[5 6 14 2 1 7 9 10 11 12 8]; % short stim
+optogenetics.profiles{2}=[3 13 4]; % long stim
+optogenetics.profiles{3}=[1:14]; % all opto stim types
+% Also consider each opto stim type individually
+startLength=length(optogenetics.profiles)+1;
+j=1;
+for i=startLength:startLength+length(optoStimTypes)-1
+    optogenetics.profiles{i}=optoStimTypes(j);
+    j=j+1;
+end
 
 % Specify which optogenetic stimulus types to show in analysis
 % Refers to indices of optogenetics.profiles
 % 1 if show; 0 if don't show
-optogenetics.show_profiles=[1 1 1];
+% optogenetics.show_profiles=[1 1 1];
+optogenetics.show_profiles=ones(1,length(optogenetics.profiles));
 if length(optogenetics.show_profiles)~=length(optogenetics.profiles)
     error('Length of optogenetics.show_profiles must match length of optogenetics.profiles');
 end
@@ -69,7 +73,7 @@ change.baseline_subtract=1;
 change.show_windows=1; % if 1, will show time windows on example figure, else suppress this figure
 change.stats.test_type='signrank'; % type of statistical test to perform
 change.stats.vs_baseline=1; % if 1, will compare the value during timewindow to the value during baselinewindow
-change.stats.vs_othertimewindow=[0 1.5]; % if vs_baseline is 1, then will compare the value during timewindow to the value during vs_othertimewindow
+change.stats.vs_othertimewindow=[0 1.5]; % if vs_baseline is 0, then will compare the value during timewindow to the value during vs_othertimewindow
 change.display_type='pval x amp'; 
 % Options are:
 % 'pval x amp'  displays the amplitude of the change during timewindow if
@@ -98,6 +102,14 @@ traces.align_to_baseline=1; % if 1, will align traces at baseline (i.e., baselin
 % baseline window is change.baselinewindow
 traces.xlimits=[0.255 12];
 
+% If am currently iterating multiple analyses, allow
+% iterateAnalysisSettings.m to modify these settings before returning
+iterate.yes=1; % If 1, will allow iterateAnalysisSettings.m to modify settings values
+
+if iterate.yes==1
+    [behavior,optogenetics,change,sorting,dist,traces,response]=iterateAnalysisSettings(behavior,optogenetics,change,sorting,dist,traces,response,0);
+end
+
 % Output
 varargout{1}=behavior;
 varargout{2}=optogenetics;
@@ -108,4 +120,3 @@ varargout{6}=traces;
 varargout{7}=response;
 
 end
-

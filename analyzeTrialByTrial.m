@@ -1,4 +1,4 @@
-function analyzeTrialByTrial(responses,stats,times)
+function out=analyzeTrialByTrial(responses,stats,times)
 
 % Get analysis settings
 [bset,oset,cset,~,dist]=analysisSettings();
@@ -62,6 +62,8 @@ end
 title('Distribution of Effects Across Trials -- Each Curve is One Cell');
 xlabel('delta F over F');
 ylabel('Count');
+out.histgramsx=histgrams.x;
+out.histgramsy=histgrams.y;
 
 % Plot effects combining cells
 [n,x]=hist(allchanges,dist.nBins);
@@ -116,6 +118,10 @@ if dist.sortTrials.yes==1
     title('Distribution of Effects Across Trials -- Trials Divided Up');
     xlabel('delta F over F');
     ylabel('Count');
+    out.sort1_histgramsx=histgrams1.x;
+    out.sort1_histgramsy=histgrams1.y;
+    out.sort2_histgramsx=histgrams2.x;
+    out.sort2_histgramsy=histgrams2.y;
     
     % Plot effects combining cells
     [n,x]=hist(allchanges1,dist.nBins);

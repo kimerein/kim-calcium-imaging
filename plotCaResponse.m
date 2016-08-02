@@ -1,4 +1,4 @@
-function plotCaResponse(withinCellAverages,stats,times,optoForProfile)
+function out=plotCaResponse(withinCellAverages,stats,times,optoForProfile)
 
 % Get analysis settings
 [bset,oset,cset,~,dist,traces]=analysisSettings();
@@ -51,6 +51,13 @@ ylabel('delta F over F');
 title('Response across all cells');
 xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseIncludingNonsig,1)),'Color','c');
+
+out.times=times;
+out.opto=optoToPlot;
+out.responseIncludingNonsig=responseIncludingNonsig;
+out.responseAcrossAll=responseAcrossAll;
+out.responseForIncrease=responseForIncrease;
+out.responseForDecrease=responseForDecrease;
 
 figure();
 hax=axes();

@@ -1,4 +1,4 @@
-function [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile]=analysisSecondHalf(loadDir)
+function [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,out]=analysisSecondHalf(loadDir)
 
 % Load in data from first half of analysis
 listing=dir(loadDir);
@@ -157,6 +157,9 @@ pcolor(alltogether);
 colorbar;
 xlabel('Cells');
 ylabel('Opto Stim and Behavior');
+
+out.display_matrix=alltogether(1:end-1,1:end-1);
+[out.behavior,out.optogenetics,out.change,out.sorting,out.dist,out.traces,out.response]=analysisSettings();
 
 end
 
