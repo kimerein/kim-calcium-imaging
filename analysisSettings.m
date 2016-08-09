@@ -107,7 +107,7 @@ traces.xlimits=[0.255 12];
 iterate.yes=1; % If 1, will allow iterateAnalysisSettings.m to modify settings values
 
 if iterate.yes==1
-    [behavior,optogenetics,change,sorting,dist,traces,response]=iterateAnalysisSettings(behavior,optogenetics,change,sorting,dist,traces,response,0);
+    [behavior,optogenetics,change,sorting,dist,traces,response]=iterateAnalysisSettings(behavior,optogenetics,change,sorting,dist,traces,response,0,0);
 end
 
 % Output

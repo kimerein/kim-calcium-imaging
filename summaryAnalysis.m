@@ -1,8 +1,8 @@
-function summaryAnalysis(dataDir,saveDir,acq_objDir)
+function summaryAnalysis(dataDir,saveDir,acq_obj_pointer)
 
 % Set locations to files and directories
 orchestraOutput=dataDir;
-acq_obj=acq_objDir;
+acq_obj=acq_obj_pointer;
 saveDir=saveDir;
 
 % Read in CNMF output
@@ -38,26 +38,69 @@ obj=a.(names{1});
 % Iterate through analysis conditions
 
 % Clear counter
-iterateAnalysisSettings([],[],[],[],[],[],[],1);
+iterateAnalysisSettings([],[],[],[],[],[],[],1,0);
 
-% First, real opto stim
-dFoverF_viewer(Cf,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',saveDir,[]);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load in saved data
-load([saveDir '\optoMapping.mat']);
-load([saveDir '\optoStimTypes.mat']);
-load([saveDir '\useComponents.mat']);
+load([saveDir '\partwayData_moviematched\optoMapping.mat']);
+load([saveDir '\partwayData_moviematched\optoStimTypes.mat']);
+load([saveDir '\partwayData_moviematched\useComponents.mat']);
 readin_data.optoMapping=optoMapping;
 readin_data.optoStimTypes=optoStimTypes;
 readin_data.useComponents=useComponents;
 
+% First, real opto stim
+dFoverF_viewer(Cf,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',saveDir,readin_data);
+
+% % Load in saved data
+% load([saveDir '\partwayData_moviematched\optoMapping.mat']);
+% load([saveDir '\partwayData_moviematched\optoStimTypes.mat']);
+% load([saveDir '\partwayData_moviematched\useComponents.mat']);
+% readin_data.optoMapping=optoMapping;
+% readin_data.optoStimTypes=optoStimTypes;
+% readin_data.useComponents=useComponents;
+
+% Run analysis on real opto stim
 [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,matrixOfEffects]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
 traceOutput=plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);
+fxDistributionOutput=analyzeTrialByTrial(withinCellResponses,withinCellStats,times);
+
+% Save output of analysis
+if ~exist([saveDir '\opto_stim'],'dir')
+    mkdir([saveDir '\opto_stim']);
+end
+save([saveDir '\opto_stim\withinCellResponses.mat'],'withinCellResponses');
+save([saveDir '\opto_stim\withinCellStats.mat'],'withinCellStats');
+save([saveDir '\opto_stim\withinCellAverages.mat'],'withinCellAverages');
+save([saveDir '\opto_stim\times.mat'],'times');
+save([saveDir '\opto_stim\optoForProfile.mat'],'optoForProfile');
+save([saveDir '\opto_stim\matrixOfEffects.mat'],'matrixOfEffects');
+save([saveDir '\opto_stim\traceOutput.mat'],'traceOutput');
+save([saveDir '\opto_stim\fxDistributionOutput.mat'],'fxDistributionOutput');
 
 
 
-% Run analysis Step 2
-[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Change analysis settings to shutter only (no opto stim)
+iterateAnalysisSettings([],[],[],[],[],[],[],0,1);
 
-% Plot opto-triggered Ca2+ traces
-plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);
+% Shutter only
+dFoverF_viewer(Cf,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',saveDir,readin_data);
+
+% Run analysis on shutter only
+[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,matrixOfEffects]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
+traceOutput=plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);
+fxDistributionOutput=analyzeTrialByTrial(withinCellResponses,withinCellStats,times);
+
+% Save output of analysis
+if ~exist([saveDir '\control'],'dir')
+    mkdir([saveDir '\control']);
+end
+save([saveDir '\control\withinCellResponses.mat'],'withinCellResponses');
+save([saveDir '\control\withinCellStats.mat'],'withinCellStats');
+save([saveDir '\control\withinCellAverages.mat'],'withinCellAverages');
+save([saveDir '\control\times.mat'],'times');
+save([saveDir '\control\optoForProfile.mat'],'optoForProfile');
+save([saveDir '\control\matrixOfEffects.mat'],'matrixOfEffects');
+save([saveDir '\control\traceOutput.mat'],'traceOutput');
+save([saveDir '\control\fxDistributionOutput.mat'],'fxDistributionOutput');
