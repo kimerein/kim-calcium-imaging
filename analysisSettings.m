@@ -1,7 +1,7 @@
 function varargout=analysisSettings()
 
 % Specify which type of response to use
-response.type='raw'; % 'inferred' from CNMF or 'raw'
+response.type='spikes'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
 response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
 
 % Set type of behavior to analyze
@@ -60,8 +60,8 @@ if length(optogenetics.show_profiles)~=length(optogenetics.profiles)
 end
 
 % Change in Ca2+ trace over the course of trial
-change.timewindow=[0.7 6.8]; % in seconds with respect to start of trial
-change.baselinewindow=[0.255 0.7]; % in seconds with respect to start of trial
+change.timewindow=[0.6 6]; % in seconds with respect to start of trial
+change.baselinewindow=[0 0.6]; % in seconds with respect to start of trial
 % change.timewindow=[6.4 12.4]; % in seconds with respect to start of trial
 % change.baselinewindow=[5.955 6.4]; % in seconds with respect to start of trial
 % change.timewindow=[7.4 13.5]; % in seconds with respect to start of trial
@@ -81,14 +81,14 @@ change.display_type='pval x amp';
 change.sigval=0.05; 
 
 % How to sort units in display
-sorting.by_this_behavior=6; % Refers to indices of behavior.profiles
+sorting.by_this_behavior=1; % Refers to indices of behavior.profiles
 sorting.by_this_opto=3; % Refers to indices of optogenetics.profiles
 % Will sort units according to their responses under these behavior and
 % opto conditions
 sorting.order='ascend'; % options are 'ascend' or 'descend'
 
 % Show effect distributions for this condition
-dist.by_this_behavior=6; % Refers to indices of behavior.profiles
+dist.by_this_behavior=1; % Refers to indices of behavior.profiles
 dist.by_this_opto=3; % Refers to indices of optogenetics.profiles
 dist.nBins=1000; % Number of bins to use for histograms of effect distributions
 dist.normalize=0; % if 1, will normalize histograms

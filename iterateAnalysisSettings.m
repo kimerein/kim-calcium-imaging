@@ -27,19 +27,19 @@ switch counter
     % I. Real opto stim
     case 1
         response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
-        change.timewindow=[0.7 6.4]; % in seconds with respect to start of trial
+        change.timewindow=[0.7 6]; % in seconds with respect to start of trial
         change.baselinewindow=[0.255 0.7]; % in seconds with respect to start of trial
     % II. Shutter only
     case 2
         response.shutter_only=1; % if 1, use shutter only as the stimulus (no opto), else use opto
 %         change.timewindow=[7.4 13.5]; % in seconds with respect to start of trial
-        change.timewindow=[6.4 12.1]; % in seconds with respect to start of trial
+        change.timewindow=[6.4 11.7]; % in seconds with respect to start of trial
 %         change.baselinewindow=[6.955 7.4]; % in seconds with respect to start of trial
         change.baselinewindow=[5.955 6.4]; % in seconds with respect to start of trial
     otherwise
         % Have default be real opto stim
         response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
-        change.timewindow=[0.7 6.8]; % in seconds with respect to start of trial
+        change.timewindow=[0.7 6]; % in seconds with respect to start of trial
         change.baselinewindow=[0.255 0.7]; % in seconds with respect to start of trial
 end
 

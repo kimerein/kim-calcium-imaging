@@ -27,6 +27,23 @@ options = CNMFSetParms(...
 'gSig',tau...
 );
 
+if isempty(cell_by_traces)
+    % Get ROIs from CNMF
+    roi_masks=get_ROIs(Ao,options);
+    
+    % Normalize ROIs such that spatial integral across all pixels is 1
+    for i=1:length(roi_masks)
+        temp=roi_masks{i};
+        integral=sum(sum(temp));
+        roi_masks{i}=temp/integral;
+    end
+    
+    % Get Ca2+ traces by applying ROI masks to movie
+    traces=apply_ROIs_to_movie(roi_masks,acq_obj);
+    
+    % Get traces concatenated across trials
+    cell_by_traces=convert_trials_to_continuous(traces);
+
 % Load Acquisition2P object (output of motion correction)
 a=load(acq_obj);
 names=fieldnames(a);
@@ -46,7 +63,12 @@ end
 
 % First, real opto stim
 cell_by_traces=(cell_by_traces*max(max(Cf)))./max(max(cell_by_traces));
-% dFoverF_viewer(cell_by_traces,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',[saveDir '\comparing_raw_to_processed'],readin_data);
 dFoverF_viewer(cell_by_traces,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',[saveDir '\comparing_raw_to_processed'],readin_data);
+% cell_by_traces=(cell_by_traces*max(max(Yk)))./max(max(cell_by_traces));
+% dFoverF_viewer(Cf,obj,'Opto_Stim',cell_by_traces,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',[saveDir '\comparing_raw_to_processed'],readin_data);
+
+[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,matrixOfEffects]=analysisSecondHalf([saveDir '\comparing_raw_to_processed\partwayData_moviematched']);
+traceOutput=plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);
+% fxDistributionOutput=analyzeTrialByTrial(withinCellResponses,withinCellStats,times);
 
 end
