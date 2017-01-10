@@ -1,8 +1,10 @@
 function varargout=analysisSettings()
 
 % Specify which type of response to use
-response.type='spikes'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
+response.type='raw'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
 response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
+response.include_previous_trial=1; % if 1, will add some data from end of previous trial to beginning of each trial
+response.n_previous_trial_inds=10; % how many indices from previous trial end to add to beginning of each trial
 
 % Set type of behavior to analyze
 behavior.profile_type='runningBeforeAndAfterOpto';
@@ -67,7 +69,7 @@ change.baselinewindow=[0 0.6]; % in seconds with respect to start of trial
 % change.timewindow=[7.4 13.5]; % in seconds with respect to start of trial
 % change.baselinewindow=[6.955 7.4]; % in seconds with respect to start of trial
 % change.baselinewindow=[6.3 7]; % in seconds with respect to start of trial
-change.baseline_subtract=1; 
+change.baseline_subtract=0; 
 % If baseline_subtract is 1, analysis will subtract mean of Ca2+ trace during baselinewindow from mean during timewindow
 % else analysis will return just the mean of Ca2+ trace during timewindow
 change.show_windows=1; % if 1, will show time windows on example figure, else suppress this figure
@@ -81,14 +83,14 @@ change.display_type='pval x amp';
 change.sigval=0.05; 
 
 % How to sort units in display
-sorting.by_this_behavior=1; % Refers to indices of behavior.profiles
+sorting.by_this_behavior=6; % Refers to indices of behavior.profiles
 sorting.by_this_opto=3; % Refers to indices of optogenetics.profiles
 % Will sort units according to their responses under these behavior and
 % opto conditions
 sorting.order='ascend'; % options are 'ascend' or 'descend'
 
 % Show effect distributions for this condition
-dist.by_this_behavior=1; % Refers to indices of behavior.profiles
+dist.by_this_behavior=6; % Refers to indices of behavior.profiles
 dist.by_this_opto=3; % Refers to indices of optogenetics.profiles
 dist.nBins=1000; % Number of bins to use for histograms of effect distributions
 dist.normalize=0; % if 1, will normalize histograms
@@ -98,7 +100,7 @@ dist.sortTrials.by_window=[0.255 0.7]; % divide trials according to Ca2+ trace d
 dist.sortTrials.divide_at='median'; % divide trials at this location; if 'median', will separate trials at the median
 
 % Plot Ca2+ traces
-traces.align_to_baseline=1; % if 1, will align traces at baseline (i.e., baseline-subtract)
+traces.align_to_baseline=0; % if 1, will align traces at baseline (i.e., baseline-subtract)
 % baseline window is change.baselinewindow
 traces.xlimits=[0.255 12];
 

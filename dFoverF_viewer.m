@@ -118,7 +118,7 @@ plot_components_GUI_withopto_andBeh(C_df,Cn,f2,A_or,b2,Yk,Df,options,opto_stim,b
 % Get average opto-triggered responses 
 if strcmp(responsesType.type,'raw')
     rawResponses=nan(size(C_df,1),size(Yk,2));
-    for i=1:size(C_df,1)
+    for i=1:size(C_df,1)-1
         rawResponses(i,:)=Yk(i,:)/Df(i);
     end
     [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,rawResponses,behMovieLength);
@@ -138,11 +138,15 @@ end
 if strcmp(responsesType.type,'spikes')
     for i=1:length(optoTriggeredResponses)
         curr=optoTriggeredResponses{i};
-        temp=nan(size(curr));
+        stitched=[];
         for j=1:size(curr,1)
-            temp(j,:)=get_spikes_from_Ca2(curr(j,:),options);
+            if j==1
+                stitched=[stitched curr(j,:)];
+            else
+                stitched=[stitched curr(j,:)-curr(j,1)+stitched(end)];
+            end
         end
-        optoTriggeredResponses{i}=temp;
+        optoTriggeredResponses{i}=get_spikes_from_Ca2(stitched,options);
     end
 end
             
@@ -237,18 +241,32 @@ end
 function [acrossTrialsResponse,acrossTrialsOpto,baseInds]=optoTriggeredResponse(opto_stim,C_df)
 % C_df is deltaFoverF trace from one neuron (vector)
 
+[~,~,~,~,~,~,response]=analysisSettings;
+
 j=1;
 % acrossTrialsResponse=zeros(length(opto_stim),length(opto_stim{1})+10);
 % acrossTrialsOpto=zeros(length(opto_stim),length(opto_stim{1})+10);
 for i=1:length(opto_stim)
+    if i==1
+        prevOpto=nan(size(opto_stim{i}));
+        prevCa=nan(size(C_df(j:j+length(prevOpto)-1)));
+    else
+        prevOpto=currOpto;
+        prevCa=currCa;
+    end
     currOpto=opto_stim{i};
     currCa=C_df(j:j+length(currOpto)-1);
     j=j+length(currOpto);
     if i==1
         optoAt=find(currOpto>0,1,'first');
         baseInds=optoAt-1;
-        acrossTrialsResponse=zeros(length(opto_stim),length(currCa));
-        acrossTrialsOpto=zeros(length(opto_stim),length(currCa));
+        if response.include_previous_trial==1
+            acrossTrialsResponse=zeros(length(opto_stim),length(currCa)+response.n_previous_trial_inds);
+            acrossTrialsOpto=zeros(length(opto_stim),length(currCa)+response.n_previous_trial_inds);
+        else
+            acrossTrialsResponse=zeros(length(opto_stim),length(currCa));
+            acrossTrialsOpto=zeros(length(opto_stim),length(currCa));
+        end
     end
     currOptoAt=find(currOpto>0,1,'first');
     currBaseInds=currOptoAt-1;
@@ -262,6 +280,11 @@ for i=1:length(opto_stim)
 %         acrossTrialsOpto(i,:)=[currOpto(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
         currCa=[currCa(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
         currOpto=[currOpto(currBaseInds-baseInds+1:end) zeros(1,currBaseInds-baseInds)];
+    end
+    % Add some data from previous trial to beginning of this trial?
+    if response.include_previous_trial==1
+        currCa=[prevCa(end-response.n_previous_trial_inds:end) currCa];
+        currOpto=[prevOpto(end-response.n_previous_trial_inds:end) currOpto];
     end
     if size(acrossTrialsResponse,2)>length(currCa) % This trial is shorter ... fill with nans
         temp=nan(1,size(acrossTrialsResponse,2));
@@ -278,7 +301,11 @@ for i=1:length(opto_stim)
         acrossTrialsOpto(i,:)=currOpto;
     end
 end
-    
+ 
+if response.include_previous_trial==1
+    baseInds=baseInds+response.n_previous_trial_inds;
+end
+
 end
 
 function newSignal=putDeltasIntoResample(signal,newSize,deltaThresh)
