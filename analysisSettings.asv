@@ -20,10 +20,9 @@ behavior.profile_type='runningBeforeAndAfterOpto';
 
 % Noise thresholds for automatically grouping opto stims - User will then have the option
 % to manually change this grouping
-optogenetics.noiseThresh=50; % High-frequency noise threshold (below this, difference is just high-freq noise)
-optogenetics.acceptable_timeJitter_thresh=0.0009; % in seconds, if opto pulses differ in onset/offset timing by less than this amount, 
-                                                  % they will be considered the same stim
-                                                 
+optogenetics.noiseThresh=1; % High-frequency noise threshold (below this, difference is just high-freq noise)
+optogenetics.acceptable_timeJitter_thresh=0.00
+
 % Which behavioral profiles to consider for analysis
 behavior.profiles{1}={{0; 0}};
 behavior.profiles{2}={{1; 1}};

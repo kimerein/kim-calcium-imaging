@@ -2,9 +2,9 @@
 % traces
 
 %% Set locations to files and directories
-orchestraOutput='\\research.files.med.harvard.edu\Neurobio\MICROSCOPE\Kim\for_orchestra\CNMF\20160801\mouse20160607\cnmf.out';
-acq_obj='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160607\obj.mat';
-saveDir='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20160607\CNMF output';
+orchestraOutput='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\for_orchestra\CNMF\20170112\20161217mouse2\cnmf.out';
+acq_obj='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20161217\Mouse 2\stim.mat';
+saveDir='\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20161217\Mouse 2\CNMF output';
 
 %% Read in CNMF output
 [Yr,b2,f2,Cn,Yk,Cf,Df,Ao]=readOrchestraOutput(orchestraOutput);
@@ -15,7 +15,7 @@ tau = 5;                                          % std of gaussian kernel (size
 p = 1;                                            % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 merge_thr = 0.75;                                  % merging threshold
 options = CNMFSetParms(...
-'d1',128,'d2',512,...                         % dimensions of datasets
+'d1',128,'d2',256,...                         % dimensions of datasets
 'ssub',6,'tsub',1,...
 'min_corr',0.3,...
 'nb',1,...

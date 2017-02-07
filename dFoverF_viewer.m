@@ -100,19 +100,19 @@ times=0:frameDuration:(size(C_df,2)-1)*frameDuration;
 
 % Plot dFoverF GUI with opto data
 [~,~,~,~,~,~,responsesType]=analysisSettings();
-% if strcmp(responsesType.type,'spikes')
-%     % Transform background-subtracted to spikes using constrained_foopsi deconvolution
-%     rawResponses=nan(size(C_df,1),size(Yk,2));
-%     for i=1:size(C_df,1)
-%         rawResponses(i,:)=Yk(i,:)/Df(i);
-%     end
-% %     % Transform inferred to spiking using constrained_foopsi deconvolution
-% %     temp=nan(size(C_df));
-% %     for i=1:size(C_df,1)
-% %         temp(i,:)=get_spikes_from_Ca2(C_df(i,:),options);
-% %     end
-% %     C_df=temp;
-% end
+if strcmp(responsesType.type,'spikes')
+    % Transform background-subtracted to spikes using constrained_foopsi deconvolution
+    rawResponses=nan(size(C_df,1),size(Yk,2));
+    for i=1:size(C_df,1)
+        rawResponses(i,:)=Yk(i,:)/Df(i);
+    end
+    % Transform inferred to spiking using constrained_foopsi deconvolution
+    temp=nan(size(C_df));
+    for i=1:size(C_df,1)
+        temp(i,:)=get_spikes_from_Ca2(C_df(i,:),options);
+    end
+    C_df=temp;
+end
 plot_components_GUI_withopto_andBeh(C_df,Cn,f2,A_or,b2,Yk,Df,options,opto_stim,beh,times);
 
 % Get average opto-triggered responses 

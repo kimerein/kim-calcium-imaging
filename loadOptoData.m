@@ -16,7 +16,7 @@ optoData=findPhysData(obj,movieOrder,nameOptoCommand);
 % Create a mapping that specifies which opto stim types were given in this
 % experiment (i.e., are present in the current data set), and map these
 % opto stim types to integer values
-[optoMapping,groups]=createOptoMapping(optoData);
+[optoMapping,groups]=createOptoMapping(optoData,times);
 
 % Remove from opto data time points when imaging shutter is closed 
 % Note that this will remove voltage commands of opto stimuli from the
@@ -118,6 +118,8 @@ frameDuration=(obj.sabaMetadata.acq.msPerLine/1000)*obj.sabaMetadata.acq.linesPe
 
 % Find windows when shutter is closed
 % Shutter command is assumed to be TTL
+% Make all shutter values above TTL threshold TTL high
+shutterData(shutterData>2.5)=5;
 shutterStateChanges=find(abs(diff(shutterData))>2.5);
 shutterOffWindows=[];
 if obj.sabaMetadata.highMeansShutterOff==1
@@ -210,13 +212,15 @@ times=times(isShutteredTime==0);
   
 end
 
-function [optoMapping,groups]=createOptoMapping(optoData)
+function [optoMapping,groups]=createOptoMapping(optoData,times)
 
 % optoData is opto voltage command
 % rows are trials; columns are time points
 
 % Get the set of opto stim presented in this expt (i.e., current data set)
-noiseThresh=1; % threshold for high-frequency noise
+[~,oo]=analysisSettings();
+noiseThresh=oo.noiseThresh; % threshold for high-frequency noise
+timeJitter=oo.acceptable_timeJitter_thresh; % threshold for acceptable time jitter in opto pulse onset/offset
 isSorted=zeros(size(optoData,1),1);
 groups=nan(size(optoData,1),1);
 currGroup=1;
@@ -230,6 +234,38 @@ while any(isSorted==0)
            if all(abs(currOpto-optoData(i,:))<noiseThresh) % if vectors are equal
                groups(i)=currGroup;
                isSorted(i)=1;
+           else
+               % Test whether differences are small time differences in
+               % pulse onset/offset, i.e., acceptable jitter
+               stillSame=1;
+               timeStep=times(2)-times(1);
+               differTimes=find(abs(currOpto-optoData(i,:))>noiseThresh);
+               % Find duration of these differing stretches
+               checkedTime=zeros(1,length(currOpto));
+               for j=1:length(differTimes)
+                   curr_diffTime=differTimes(j);
+                   checkedTime(curr_diffTime)=1;
+                   if ismember(curr_diffTime+1,differTimes)
+                       % Stretch continues
+                       continue
+                   else
+                       % Stretch ends after this
+                       checkedTime(curr_diffTime+1)=1;
+                       lengthOfStretch=sum(checkedTime);
+                       if lengthOfStretch*timeStep>timeJitter
+                           stillSame=0;
+                           break
+                       else
+                           checkedTime=zeros(1,length(currOpto)); % reset
+                       end
+                   end
+               end
+               if stillSame==1 % opto stims should be grouped
+                    groups(i)=currGroup;
+                    isSorted(i)=1;
+               else % opto stims should not be grouped
+                    disp('Are they actually equal?');
+               end
            end
        end
    end

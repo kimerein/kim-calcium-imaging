@@ -27,10 +27,10 @@ end
 nr = size(C_df,1);     % number of ROIs
 nb = size(f2,1);     % number of background components
 
-% A=Ao;
-% nA = sqrt(sum(A.^2))';
-% K=size(Ao,2);
-% A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
+A=Ao;
+nA = sqrt(sum(A.^2))';
+K=size(Ao,2);
+A = A/spdiags(nA,0,K,K);    % normalize spatial components to unit energy
 
 % Video save settings
 if save_avi
@@ -44,7 +44,7 @@ set(gcf,'Position',2*[300,300,960,480]);
 set(gcf,'PaperPosition',2*[300,300,960,480]);
 int_x = zeros(nr,2*sx);
 int_y = zeros(nr,2*sx);
-cm = com(Ao,d1,d2);
+cm = com(A,d1,d2);
 
 % Create a figure and axes
 % ax = axes('Units','DF/F');
