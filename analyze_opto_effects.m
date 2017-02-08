@@ -38,7 +38,7 @@ obj=a.(names{1});
 dFoverF_viewer(Cf,obj,'Opto_Stim',Yk,Ao,Cn,b2,f2,Df,options,'Wheel_Encoder',saveDir,[]);
 
 %% Run analysis Step 2
-[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
+[withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,out,behForProfile]=analysisSecondHalf([saveDir '\partwayData_moviematched']);
 
 %% Plot opto-triggered Ca2+ traces
-plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile);
+plotCaResponse(withinCellAverages,withinCellStats,times,optoForProfile,behForProfile);

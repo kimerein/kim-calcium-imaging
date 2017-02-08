@@ -1,4 +1,4 @@
-function out=plotCaResponse(withinCellAverages,stats,times,optoForProfile)
+function out=plotCaResponse(withinCellAverages,stats,times,optoForProfile,behForProfile)
 
 % Get analysis settings
 [bset,oset,cset,~,dist,traces]=analysisSettings();
@@ -13,6 +13,7 @@ optoNum=sum(oset.show_profiles(1:dist.by_this_opto)==1);
 data=withinCellAverages{behNum,optoNum};
 stat=stats{behNum,optoNum};
 opto=optoForProfile{behNum,optoNum};
+beh=behForProfile{behNum,optoNum};
 
 responseAcrossAll=nan(size(data,1),size(data,2));
 responseForIncrease=nan(size(data,1),size(data,2));
@@ -42,6 +43,7 @@ end
 
 optoToPlot=nanmean(opto,1);
 optoToPlot=optoToPlot./max(optoToPlot);
+beh=beh./max(beh);
 % Plot Ca2+ traces across cells
 figure();
 hax=axes();
@@ -51,6 +53,7 @@ ylabel('delta F over F');
 title('Response across all cells');
 xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseIncludingNonsig,1)),'Color','c');
+plot(hax,times,beh.*max(nanmean(responseIncludingNonsig,1)),'Color','g');
 
 out.times=times;
 out.opto=optoToPlot;
@@ -67,6 +70,7 @@ ylabel('delta F over F');
 title('Response across all cells with a significant change');
 xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseAcrossAll,1)),'Color','c');
+plot(hax,times,beh.*max(nanmean(responseIncludingNonsig,1)),'Color','g');
 
 figure();
 hax=axes();
@@ -76,6 +80,7 @@ ylabel('delta F over F');
 title('Response across all cells with a significant increase');
 xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseForIncrease,1)),'Color','c');
+plot(hax,times,beh.*max(nanmean(responseIncludingNonsig,1)),'Color','g');
 
 figure();
 hax=axes();
@@ -85,3 +90,4 @@ ylabel('delta F over F');
 title('Response across all cells with a significant decrease');
 xlim([traces.xlimits(1) traces.xlimits(2)]);
 plot(hax,times,optoToPlot.*max(nanmean(responseForDecrease,1)),'Color','c');
+plot(hax,times,beh.*max(nanmean(responseIncludingNonsig,1)),'Color','g');

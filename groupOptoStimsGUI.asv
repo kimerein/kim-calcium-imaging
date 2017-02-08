@@ -58,10 +58,15 @@ handles.output = hObject;
 optoMapping=varargin{1};
 optoStimTypes=varargin{2};
 times=varargin{3};
+obj=varargin{4};
 handles.optoMapping=optoMapping;
 handles.optoStimTypes=optoStimTypes;
+handles.obj=obj;
 
 set(hObject,'CloseRequestFcn',@closeGUI);
+
+% Check for blue light control (i.e., opto stim is outside of head) in movie files
+areBlueLightControls=checkForControl(obj);
 
 beforeMapping=nan(size(optoMapping,1),1);
 for i=1:size(optoMapping,1)
@@ -69,11 +74,7 @@ for i=1:size(optoMapping,1)
     hax=subplot(size(optoMapping,1),1,i);
     axesname=['axes' num2str(i)];
     handles.(axesname)=hax;
-    if strcmp(optoMapping{i,3},'control')
-        plot(times,optoMapping{i,1},'Color','k');
-    else
-        plot(times,optoMapping{i,1},'Color','b');
-    end
+    plot(times,optoMapping{i,1});
     axis tight
     if i~=size(optoMapping,1)
         set(gca,'XTickLabelMode','manual','XTickLabel',[]);
@@ -109,6 +110,16 @@ function varargout = groupOptoStimsGUI_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.optoMapping;
 varargout{2} = handles.optoStimTypes;
 delete(handles.figure1);
+
+
+function areBlueLightControls = checkForControl(obj)
+
+% Parse movie names, looking for key word tag
+[~,opto]=analysisSettings();
+tag=opto.control_tag; % a string indicating something different about the opto stim in this file, will be grouped separately
+for i=1:length(obj.Movies)
+    currMovName=obj.Moves{i};
+    
 
 function  editCallback(hObject, eventdata)
 

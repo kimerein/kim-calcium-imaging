@@ -9,8 +9,14 @@ function varargout=analysisSettings()
 % Specify which type of response to use
 response.type='inferred'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
 response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
-response.include_previous_trial=1; % if 1, will add some data from end of previous trial to beginning of each trial
+response.include_previous_trial=0; % if 1, will add some data from end of previous trial to beginning of each trial
 response.n_previous_trial_inds=10; % how many indices from previous trial end to add to beginning of each trial
+
+% Any control files should be labeled with a tag in the movie file name
+% For example, the tag "bluelightcontrol" might indicate that the
+% optogenetic stimulus was positioned outside of the head
+optogenetics.control_tag='bluelightcontrol'; % If this string is in the movie file name, this optogenetic stimulus will be treated as
+                                             % different from an identical-looking optogenetic stimulus lacking this tag in the movie file name
 
 % Set type of behavior to analyze
 behavior.profile_type='runningBeforeAndAfterOpto';
@@ -45,17 +51,17 @@ behavior.profiles{6}={{[0 1]; [0 1]}};
 % Specify which behavioral profiles to show in analysis 
 % Refers to indices of behavior.profiles
 % 1 if show; 0 if don't show
-behavior.show_profiles=[0 0 0 0 1 0]; 
+behavior.show_profiles=[1 0 0 0 0 0]; 
 if length(behavior.show_profiles)~=length(behavior.profiles)
     error('Length of behavior.show_profiles must match length of behavior.profiles');
 end
 
 % Which optogenetic stimulus types to consider for analysis
 % these numbers are indices into optoMapping; combine all these opto stim types
-optoStimTypes=[1:14]; % all opto stim types in this expt
-optogenetics.profiles{1}=[5 6 14 2 1 7 9 10 11 12 8]; % short stim
-optogenetics.profiles{2}=[3 13 4]; % long stim
-optogenetics.profiles{3}=[1:14]; % all opto stim types
+optoStimTypes=[1:2]; % all opto stim types in this expt
+optogenetics.profiles{1}=[1]; % short stim
+optogenetics.profiles{2}=[2]; % long stim
+optogenetics.profiles{3}=[1:2]; % all opto stim types
 % Also consider each opto stim type individually
 startLength=length(optogenetics.profiles)+1;
 j=1;
@@ -67,15 +73,15 @@ end
 % Specify which optogenetic stimulus types to show in analysis
 % Refers to indices of optogenetics.profiles
 % 1 if show; 0 if don't show
-% optogenetics.show_profiles=[1 1 1];
-optogenetics.show_profiles=ones(1,length(optogenetics.profiles));
+optogenetics.show_profiles=[1 1 1 0 0];
+% optogenetics.show_profiles=ones(1,length(optogenetics.profiles));
 if length(optogenetics.show_profiles)~=length(optogenetics.profiles)
     error('Length of optogenetics.show_profiles must match length of optogenetics.profiles');
 end
 
 % Change in Ca2+ trace over the course of trial
-change.timewindow=[0.6 6]; % in seconds with respect to start of trial
-change.baselinewindow=[0 0.6]; % in seconds with respect to start of trial
+change.timewindow=[4.115 10]; % in seconds with respect to start of trial
+change.baselinewindow=[0 4]; % in seconds with respect to start of trial
 % change.timewindow=[6.4 12.4]; % in seconds with respect to start of trial
 % change.baselinewindow=[5.955 6.4]; % in seconds with respect to start of trial
 % change.timewindow=[7.4 13.5]; % in seconds with respect to start of trial
@@ -95,14 +101,14 @@ change.display_type='pval x amp';
 change.sigval=0.05; 
 
 % How to sort units in display
-sorting.by_this_behavior=6; % Refers to indices of behavior.profiles
+sorting.by_this_behavior=1; % Refers to indices of behavior.profiles
 sorting.by_this_opto=3; % Refers to indices of optogenetics.profiles
 % Will sort units according to their responses under these behavior and
 % opto conditions
 sorting.order='ascend'; % options are 'ascend' or 'descend'
 
 % Show effect distributions for this condition
-dist.by_this_behavior=6; % Refers to indices of behavior.profiles
+dist.by_this_behavior=5; % Refers to indices of behavior.profiles
 dist.by_this_opto=3; % Refers to indices of optogenetics.profiles
 dist.nBins=1000; % Number of bins to use for histograms of effect distributions
 dist.normalize=0; % if 1, will normalize histograms
@@ -112,7 +118,7 @@ dist.sortTrials.by_window=[0.255 0.7]; % divide trials according to Ca2+ trace d
 dist.sortTrials.divide_at='median'; % divide trials at this location; if 'median', will separate trials at the median
 
 % Plot Ca2+ traces
-traces.align_to_baseline=0; % if 1, will align traces at baseline (i.e., baseline-subtract)
+traces.align_to_baseline=1; % if 1, will align traces at baseline (i.e., baseline-subtract)
 % baseline window is change.baselinewindow
 traces.xlimits=[0.255 12];
 

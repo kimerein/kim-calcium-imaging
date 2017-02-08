@@ -82,13 +82,13 @@ for i=1:length(opto_shutterTimesRemoved)
     if isOpto==1
         if ~isnan(putOptoHere)
             optoMovie(putOptoHere)=max(opto_shutterTimesRemoved{i});
-        end
+        end 
     else
         % Force length of opto_shutterTimesRemoved{i} to match length of
         % movie
         resampleRate=floor(length(opto_shutterTimesRemoved{i})/length(shutterTimesInMovie{i}));
         temp=decimate(opto_shutterTimesRemoved{i},resampleRate);
-        optoMovie=temp(1:length(shutterTimesInMovie{i}));
+        optoMovie=temp(1:length(shutterTimesInMovie{i})); 
     end
     % Remove shuttered times 
     optoMovieLength{i}=optoMovie(s<shutterThresh);

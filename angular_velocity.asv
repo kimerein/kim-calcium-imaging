@@ -3,19 +3,16 @@ function [velocity,continuous_position]=angular_velocity(positionVector,acq_obj)
 samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of phys data
 times=0:1/samplingRate:(1/samplingRate)*length(positionVector)-(1/samplingRate);
 
-velThresh=0.0015; % max rate reasonable for mouse to run
+velThresh=0.05; % max rate reasonable for mouse to run
 
 % Find where wheel angle flips back to 0
 % For all times when wheel angle flips back to 0, make curve continuous
-% Dealing w a periodic noise source
 continuous_position=positionVector;
-freqOfNoise=1/(0.128*10^4*(times(2)-times(1))); 
+freqOfNoise=1/(0.128*10^4*(times(2)-times(1)));
 fsResamp=0.128*10^4*freqOfNoise;
 pResamp=resample(positionVector,fsResamp,1/(times(2)-times(1)));
-newTimes=(0:numel(pResamp)-1)/fsResamp;
-avgP=sgolayfilt(pResamp,1,0.128*10^4+1);
-continuous_position=avgP;
-% Filtering and stitching
+newTimes=
+avgP=sgolayfilt(pResamp,1,0.128*10^4);
 filtBin=100;
 filtPos=filter(ones(1,filtBin)./filtBin,1,continuous_position);
 delayOfFilt=floor((filtBin-1)/2);
@@ -38,7 +35,7 @@ end
 % Smooth curve to reduce high-frequency noise
 % Smooth using a bin size that is small with respect to max velocity
 % attainable by mouse, e.g., 10000 for Kim's rig
-binSize=1000; 
+binSize=1000;
 continuous_position=smooth(continuous_position,binSize);
 
 % Get velocity
