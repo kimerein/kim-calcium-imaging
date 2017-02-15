@@ -13,7 +13,10 @@ response.include_previous_trial=0; % if 1, will add some data from end of previo
 response.n_previous_trial_inds=10; % how many indices from previous trial end to add to beginning of each trial
 
 % Any control files should be labeled with a tag in the movie file name
-% For e
+% For example, the tag "bluelightcontrol" might indicate that the
+% optogenetic stimulus was positioned outside of the head
+optogenetics.control_tag='bluelightcontrol'; % If this string is in the movie file name, this optogenetic stimulus will be treated as
+                                             % different from an identical-looking optogenetic stimulus lacking this tag in the movie file name
 
 % Set type of behavior to analyze
 behavior.profile_type='runningBeforeAndAfterOpto';
@@ -55,8 +58,9 @@ end
 
 % Which optogenetic stimulus types to consider for analysis
 % these numbers are indices into optoMapping; combine all these opto stim types
-optoStimTypes=[1:2]; % all opto stim types in this expt
+optoStimTypes=[1:3]; % all opto stim types in this expt
 optogenetics.profiles{1}=[1]; % short stim
+
 optogenetics.profiles{2}=[2]; % long stim
 optogenetics.profiles{3}=[1:2]; % all opto stim types
 % Also consider each opto stim type individually

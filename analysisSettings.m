@@ -51,17 +51,18 @@ behavior.profiles{6}={{[0 1]; [0 1]}};
 % Specify which behavioral profiles to show in analysis 
 % Refers to indices of behavior.profiles
 % 1 if show; 0 if don't show
-behavior.show_profiles=[1 0 0 0 0 0]; 
+behavior.show_profiles=[0 0 0 1 0 0]; 
 if length(behavior.show_profiles)~=length(behavior.profiles)
     error('Length of behavior.show_profiles must match length of behavior.profiles');
 end
 
 % Which optogenetic stimulus types to consider for analysis
 % these numbers are indices into optoMapping; combine all these opto stim types
-optoStimTypes=[1:2]; % all opto stim types in this expt
+optoStimTypes=[1:3]; % all opto stim types in this expt
 optogenetics.profiles{1}=[1]; % short stim
-optogenetics.profiles{2}=[2]; % long stim
-optogenetics.profiles{3}=[1:2]; % all opto stim types
+optogenetics.profiles{2}=[2]; % short stim, opto outside of head
+optogenetics.profiles{3}=[3]; % long stim
+optogenetics.profiles{4}=[1:3]; % all opto stim types
 % Also consider each opto stim type individually
 startLength=length(optogenetics.profiles)+1;
 j=1;
@@ -73,7 +74,7 @@ end
 % Specify which optogenetic stimulus types to show in analysis
 % Refers to indices of optogenetics.profiles
 % 1 if show; 0 if don't show
-optogenetics.show_profiles=[1 1 1 0 0];
+optogenetics.show_profiles=[1 1 1 1 0 0 0];
 % optogenetics.show_profiles=ones(1,length(optogenetics.profiles));
 if length(optogenetics.show_profiles)~=length(optogenetics.profiles)
     error('Length of optogenetics.show_profiles must match length of optogenetics.profiles');
@@ -101,15 +102,15 @@ change.display_type='pval x amp';
 change.sigval=0.05; 
 
 % How to sort units in display
-sorting.by_this_behavior=1; % Refers to indices of behavior.profiles
-sorting.by_this_opto=3; % Refers to indices of optogenetics.profiles
+sorting.by_this_behavior=4; % Refers to indices of behavior.profiles
+sorting.by_this_opto=1; % Refers to indices of optogenetics.profiles
 % Will sort units according to their responses under these behavior and
 % opto conditions
 sorting.order='ascend'; % options are 'ascend' or 'descend'
 
 % Show effect distributions for this condition
-dist.by_this_behavior=5; % Refers to indices of behavior.profiles
-dist.by_this_opto=3; % Refers to indices of optogenetics.profiles
+dist.by_this_behavior=4; % Refers to indices of behavior.profiles
+dist.by_this_opto=1; % Refers to indices of optogenetics.profiles
 dist.nBins=1000; % Number of bins to use for histograms of effect distributions
 dist.normalize=0; % if 1, will normalize histograms
 dist.sameBins=1; % if 1, will use same bins for all histograms
