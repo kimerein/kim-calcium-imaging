@@ -8,11 +8,11 @@ function varargout=analysisSettings()
 
 % Specify which type of response to use
 response.ITI=2.5; % inter-trial interval in seconds
-response.discardTheseFiles=[130]; % used for debugging, arbitrary daq output value may cause trouble, will discard these file numbers from further analysis
+response.discardTheseFiles=[]; % used for debugging, arbitrary daq output value may cause trouble, will discard these file numbers from further analysis
 % in terms of index into movies list in Acquisition2P object
-response.type='inferred'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
+response.type='spikes'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
 response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
-response.include_previous_trial=0; % if 1, will add some data from end of previous trial to beginning of each trial
+response.include_previous_trial=1; % if 1, will add some data from end of previous trial to beginning of each trial
 response.n_previous_trial_inds=10; % how many indices from previous trial end to add to beginning of each trial
 
 % Any control files should be labeled with a tag in the movie file name

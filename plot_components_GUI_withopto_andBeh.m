@@ -164,7 +164,8 @@ plot_component(1)
 %                 end
             end
         else
-            plot(times,f2(i-nr,:)); 
+%             plot(times,f2(i-nr,:)); 
+            plot(times,f2); 
             hold all;
             plot(times,beh_resample,'linewidth',1);
             plot(times,opto_stim,'linewidth',2);

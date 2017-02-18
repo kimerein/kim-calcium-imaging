@@ -180,7 +180,7 @@ plot_components_GUI_withopto_andBeh(C_df,Cn,f2,A_or,b2,Yk,Df,options,opto_stim,b
 
 % Get average opto-triggered responses 
 if strcmp(responsesType.type,'raw')
-    rawResponses=nan(size(C_df,1),size(Yk,2));
+    rawResponses=nan(size(C_df,1)-1,size(Yk,2));
     for i=1:size(C_df,1)-1
         rawResponses(i,:)=Yk(i,:)/Df(i);
     end
@@ -188,31 +188,18 @@ if strcmp(responsesType.type,'raw')
 elseif strcmp(responsesType.type,'inferred')
     [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength);
 elseif strcmp(responsesType.type,'spikes')
-%     [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,C_df,behMovieLength);
-    rawResponses=nan(size(C_df,1),size(Yk,2));
+    % From inferred CNMF
+    % Transform inferred to spiking using constrained_foopsi deconvolution
+    spikes_C_df=nan(size(C_df));
+    disp('deconvolving spikes');
     for i=1:size(C_df,1)
-        rawResponses(i,:)=Yk(i,:)/Df(i);
-    end    
-    [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,rawResponses,behMovieLength);
+        disp(i);
+        spikes_C_df(i,:)=get_spikes_from_Ca2(C_df(i,:),options);
+    end
+    [optoTriggeredResponses,acrossTrialsOpto,trialByTrialBeh]=getOptoResponseAcrossCells(optoMovieLength,spikes_C_df,behMovieLength);    
 else
     error('Do not recognize response.type in analysis settings');
-end
-
-if strcmp(responsesType.type,'spikes')
-    for i=1:length(optoTriggeredResponses)
-        curr=optoTriggeredResponses{i};
-        stitched=[];
-        for j=1:size(curr,1)
-            if j==1
-                stitched=[stitched curr(j,:)];
-            else
-                stitched=[stitched curr(j,:)-curr(j,1)+stitched(end)];
-            end
-        end
-        optoTriggeredResponses{i}=get_spikes_from_Ca2(stitched,options);
-    end
-end
-            
+end   
 
 % Save progress to saveDir
 savePartialProgress=1; % if savePartialProgress equals 1, save variables at this stage to saveDir
