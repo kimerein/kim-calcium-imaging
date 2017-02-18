@@ -45,7 +45,10 @@ if getData==0
     beh_shutterTimesRemoved=readin_data.beh_shutterTimesRemoved;
     optoStimTypes=readin_data.optoStimTypes;
     optoMapping=readin_data.optoMapping;
-    opto_shutterTimesRemoved=readin_data.opto_shutterTimesRemoved;    
+    opto_shutterTimesRemoved=readin_data.opto_shutterTimesRemoved;   
+    movieTimestamps=readin_data.movieTimestamps;
+    optoTimestamps=readin_data.optoTimestamps;
+    behTimestamps=readin_data.behTimestamps;
 else
     % Read in opto stim data
     % If shutter data associated with acq_obj has already been saved, load it
@@ -63,25 +66,78 @@ else
             shutterData=[];
         end
     end
-    [opto_shutterTimesRemoved,optoMapping,optoStimTypes]=loadOptoData(acq_obj,nameOptoCommand,shutterData);
+    
+    % Get movie timestamps
+    [~,~,~,~,~,~,response]=analysisSettings();
+    [movieTimestamps.timestamps,movieTimestamps.startOfNewTrial,movieTimestamps.timestamps_nocrop,movieTimestamps.startOfNewTrial_nocrop,movieTimestamps.shutterTimesInMovie]=getMovieTimestamps([shutterPath acq_obj.sabaMetadata.saveShutterDataFolder],acq_obj,response.ITI);
+
+    % Get opto data
+    [opto_shutterTimesRemoved,optoMapping,optoStimTypes,optoTimestamps]=loadOptoData(acq_obj,nameOptoCommand,shutterData,movieTimestamps);
     samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate of opto data
     times=0:1/samplingRate:(1/samplingRate)*length(optoMapping{1,1})-(1/samplingRate);
     
     if getOptoMapping==1
         [optoMapping,optoStimTypes]=groupOptoStimsGUI(optoMapping,optoStimTypes,times); % User decides how to group different opto stims for analysis
     end
-    beh_shutterTimesRemoved=loadGenericPhysData(acq_obj,nameBehaviorCommand,shutterData);
+    
+    % Get behavior data
+    [beh_shutterTimesRemoved,behTimestamps]=loadGenericPhysData(acq_obj,nameBehaviorCommand,shutterData,movieTimestamps);
+    [~,~,~,~,~,~,response]=analysisSettings();
+    
+    % For debugging or flaws, discard a subset of data files
+    discardTheseFiles=response.discardTheseFiles;
+    if ~isempty(discardTheseFiles)
+        fileStartInds=find(movieTimestamps.startOfNewTrial==1);
+        fileStartInds=[fileStartInds length(movieTimestamps.startOfNewTrial)+1];
+        removeInds=[];
+        for i=1:length(discardTheseFiles)
+            currDiscard=discardTheseFiles(i);
+            removeInds=[removeInds fileStartInds(currDiscard):fileStartInds(currDiscard+1)-1];
+        end
+        temp=1:size(C_df,2);
+        C_df=C_df(:,~ismember(temp,removeInds));
+        Yk=Yk(:,~ismember(temp,removeInds));
+        movieTimestamps.timestamps=
+        temp=1:length(opto_shutterTimesRemoved);
+        beh_shutterTimesRemoved=beh_shutterTimesRemoved(~ismember(temp,discardTheseFiles));
+        opto_shutterTimesRemoved=opto_shutterTimesRemoved(~ismember(temp,discardTheseFiles));
+        behTimestamps.timestamps_nocrop=behTimestamps.timestamps_nocrop(~ismember(temp,discardTheseFiles),:);
+        behTimestamps.startOfNewTrial_nocrop=behTimestamps.startOfNewTrial_nocrop(~ismember(temp,discardTheseFiles),:);
+        behTimestamps.timestamps_aftercrop=behTimestamps.timestamps_aftercrop(~ismember(temp,discardTheseFiles));
+        optoTimestamps.timestamps_nocrop=behTimestamps.timestamps_nocrop(~ismember(temp,discardTheseFiles),:);
+        optoTimestamps.startOfNewTrial_nocrop=behTimestamps.startOfNewTrial_nocrop(~ismember(temp,discardTheseFiles),:);
+        optoTimestamps.timestamps_aftercrop=behTimestamps.timestamps_aftercrop(~ismember(temp,discardTheseFiles));
+        
+        
+        frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
+        movieDuration=frameDuration*acq_obj.sabaMetadata.acq.numberOfFrames;
+        movieTimes=0:frameDuration:frameDuration*acq_obj.sabaMetadata.acq.numberOfFrames-frameDuration;
+        C_df=C_df(:,length(movieTimes)+1:end);
+        beh_shutterTimesRemoved=beh_shutterTimesRemoved(2:end);
+        opto_shutterTimesRemoved=opto_shutterTimesRemoved(2:end);
+    end
     % Time points when movie was shuttered have now been removed from opto data
     save([saveDir '\beh_shutterTimesRemoved.mat'],'beh_shutterTimesRemoved');
     save([saveDir '\optoStimTypes.mat'],'optoStimTypes');
     save([saveDir '\optoMapping.mat'],'optoMapping');
     save([saveDir '\opto_shutterTimesRemoved.mat'],'opto_shutterTimesRemoved');
+    save([saveDir '\movieTimestamps.mat'],'movieTimestamps');
+    save([saveDir '\optoTimestamps.mat'],'optoTimestamps')
+    save([saveDir '\behTimestamps.mat'],'behTimestamps')
+end
+
+% Check that movieTimestamps matches C_df
+if length(movieTimestamps.timestamps)~=size(C_df,2)
+    disp('in dFoverFviewer.m');
+    error('timestamps for movie do not match movie length');
 end
 
 % Now compare opto stim to dFoverF
 % Use saved data (from motion correction) about which frames were removed
 % from movies (when shutter on) to align opto, behavior and Ca2+ traces
-[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,C_df,acq_obj,1);
+[opto_stim,optoMovieLength]=alignToMovieFrames(opto_shutterTimesRemoved,optoTimestamps,acq_obj,1,movieTimestamps);
+
+% Process behavior data
 for i=1:length(beh_shutterTimesRemoved)
     % Often problematic transients at beginning of phys recording, so zero
     % out
@@ -93,26 +149,26 @@ for i=1:length(beh_shutterTimesRemoved)
     vel=[vel*1000 vel(end)*1000]; % Pad at end so length of velocity vector matches length of position vector
     beh_shutterTimesRemoved{i}=vel; 
 end 
-[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,C_df,acq_obj,0);
+[beh,behMovieLength]=alignToMovieFrames(beh_shutterTimesRemoved,behTimestamps,acq_obj,0,movieTimestamps);
 
 frameDuration=(acq_obj.sabaMetadata.acq.msPerLine/1000)*acq_obj.sabaMetadata.acq.linesPerFrame;
 times=0:frameDuration:(size(C_df,2)-1)*frameDuration;
 
 % Plot dFoverF GUI with opto data
 [~,~,~,~,~,~,responsesType]=analysisSettings();
-if strcmp(responsesType.type,'spikes')
-    % Transform background-subtracted to spikes using constrained_foopsi deconvolution
-    rawResponses=nan(size(C_df,1),size(Yk,2));
-    for i=1:size(C_df,1)
-        rawResponses(i,:)=Yk(i,:)/Df(i);
-    end
-    % Transform inferred to spiking using constrained_foopsi deconvolution
-    temp=nan(size(C_df));
-    for i=1:size(C_df,1)
-        temp(i,:)=get_spikes_from_Ca2(C_df(i,:),options);
-    end
-    C_df=temp;
-end
+% if strcmp(responsesType.type,'spikes')
+%     % Transform background-subtracted to spikes using constrained_foopsi deconvolution
+%     rawResponses=nan(size(C_df,1),size(Yk,2));
+%     for i=1:size(C_df,1)
+%         rawResponses(i,:)=Yk(i,:)/Df(i);
+%     end
+%     % Transform inferred to spiking using constrained_foopsi deconvolution
+%     temp=nan(size(C_df));
+%     for i=1:size(C_df,1)
+%         temp(i,:)=get_spikes_from_Ca2(C_df(i,:),options);
+%     end
+%     C_df=temp;
+% end
 plot_components_GUI_withopto_andBeh(C_df,Cn,f2,A_or,b2,Yk,Df,options,opto_stim,beh,times);
 
 % Get average opto-triggered responses 

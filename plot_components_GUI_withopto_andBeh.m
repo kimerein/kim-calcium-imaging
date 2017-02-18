@@ -106,7 +106,7 @@ plot_component(1)
             imagesc(int_x(i,:),int_y(i,:),Atemp); axis square;
         end
         subplot(3,2,[1,3]);
-        if i <= nr
+        if i <= nr-1
             cla
             imagesc(2*Cn); axis equal; axis tight; axis off; hold on;
             A_temp = full(reshape(Ao(:,i),d1,d2));

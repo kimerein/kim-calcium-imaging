@@ -1,4 +1,4 @@
-function [opto_shutterTimesRemoved,optoMapping,groups]=loadOptoData(obj,nameOptoCommand,shutterData)
+function [opto_shutterTimesRemoved,optoMapping,groups,optoTimestamps]=loadOptoData(obj,nameOptoCommand,shutterData,movieTimestamps)
 % obj is Acquisition2P object from Harvey lab motion correction
 
 nMovies = length(obj.Movies);
@@ -12,6 +12,10 @@ times=0:1/samplingRate:(1/samplingRate)*size(shutterData,2)-(1/samplingRate);
 
 % Load in opto data
 optoData=findPhysData(obj,movieOrder,nameOptoCommand);
+% Get opto data timestamps in relation to movie data
+[timestamps,startOfNewTrial]=getDataTimestamps(optoData,times,movieTimestamps);
+optoTimestamps.timestamps_nocrop=timestamps;
+optoTimestamps.startOfNewTrial_nocrop=startOfNewTrial;
 
 % Check for control (e.g., "bluelightcontrol": opto stim is outside of head) in movie files
 areControls=checkForControl(obj);
@@ -27,7 +31,7 @@ areControls=checkForControl(obj);
 % Thus, add delta functions to represent opto stimuli
 opto_shutterTimesRemoved=cell(1,size(optoData,1)); % Accomodates different time points shuttered in each trial
 for i=1:size(optoData,1)
-    [shuttered_opto,shuttered_times]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,30,groups(i));
+    [shuttered_opto,shuttered_times,optoTimestamps.timestamps(i,:),]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,30,groups(i),optoTimestamps.timestamps_nocrop(i,:),movieTimestamps);
     % Cut off or fill end of each trial so duration of opto matches duration of
     % imaging acquisition for trial
     opto_shutterTimesRemoved{i}=fixTrialToMatchImaging(obj,shuttered_opto,shuttered_times);
@@ -42,7 +46,6 @@ function areControls=checkForControl(obj)
 tag=opto.control_tag; % a string indicating something different about the opto stim in this file, will be grouped separately
 areControls=zeros(1,length(obj.Movies));
 for i=1:length(obj.Movies)
-    disp(i);
     currMovName=obj.Movies{i};
     currMovName=fliplr(currMovName);
     startInd=regexp(currMovName,'\','once');
@@ -80,6 +83,21 @@ listingnames=cell(1,length(listing));
 for i=1:length(listing)
     listingnames{i}=listing(i).name;
 end
+
+% Sort files by number
+% movNumbers=nan(1,length(listingnames));
+% for i=1:length(listingnames)
+%     currMovName=listingnames{i};
+%     currMovName=fliplr(currMovName);
+%     startInd=regexp(currMovName,'\.','once');
+%     currMovName=currMovName(startInd+1:end);
+%     isNumberInd=regexp(currMovName,'\d');
+%     numberMovName=currMovName(isNumberInd);
+%     numberMovName=fliplr(numberMovName);
+%     movNumbers(i)=str2num(numberMovName);
+% end
+% [~,inds]=sort(movNumbers);
+% listingnames=listingnames(inds);
 
 physData=[];
 if ~isempty(listing)
@@ -121,7 +139,7 @@ end
    
 end
 
-function [otherData,times]=removeShutteredTimes(obj,shutterData,otherData,times,insertOptoDelta,opto_on_thresh,group)
+function [otherData,times]=removeShutteredTimes(obj,shutterData,otherData,times,insertOptoDelta,opto_on_thresh,group,optoTimestamps,movieTimestamps)
 % Removes shuttered time points from otherData so as to match otherData
 % to movies with shuttered frames removed
 % 
@@ -197,7 +215,6 @@ shutterOffTimes(:,2)=shutterOffTimes(:,2)+(obj.sabaMetadata.shutterOpeningTime/1
 % Take into account duration of acquisition of each frame
 shutterOffTimes(:,1)=shutterOffTimes(:,1)-frameDuration;
 
-% Remove shuttered time points from otherData
 isShutteredTime=zeros(size(times));
 [~,~,~,~,~,~,resp]=analysisSettings();
 for i=1:size(shutterOffTimes,1)
@@ -229,6 +246,10 @@ for i=1:size(shutterOffTimes,1)
         end
     end
 end
+
+% Remove shuttered time points from otherData
+optoTimestamps.timestamps
+optoTimestamps.startOfNewTrial
 otherData=otherData(isShutteredTime==0);
 times=times(isShutteredTime==0);
   
@@ -262,32 +283,33 @@ while any(isSorted==0)
                isSorted(i)=1;
            else
                stillSame=1;
-               % Short-cut to bypass the following check
+               % Short-cut to bypass the following check in else
                if sum(abs(currOpto-optoData(i,:)))>noiseThresh*(length(currOpto)/2)
                    % Vectors are definitely not the same
                    stillSame=0;
                else
                    % Test whether differences are small time differences in
-               % pulse onset/offset, i.e., acceptable jitter
-               timeStep=times(2)-times(1);
-               differTimes=find(abs(currOpto-optoData(i,:))>noiseThresh);
-               % Find duration of these differing stretches
-               checkedTime=zeros(1,length(currOpto));
-               for j=1:length(differTimes)
-                   curr_diffTime=differTimes(j);
-                   checkedTime(curr_diffTime)=1;
-                   if ismember(curr_diffTime+1,differTimes)
-                       % Stretch continues
-                       continue
-                   else
-                       % Stretch ends after this
-                       checkedTime(curr_diffTime+1)=1;
-                       lengthOfStretch=sum(checkedTime);
-                       if lengthOfStretch*timeStep>timeJitter
-                           stillSame=0;
-                           break
+                   % pulse onset/offset, i.e., acceptable jitter
+                   timeStep=times(2)-times(1);
+                   differTimes=find(abs(currOpto-optoData(i,:))>noiseThresh);
+                   % Find duration of these differing stretches
+                   checkedTime=zeros(1,length(currOpto));
+                   for j=1:length(differTimes)
+                       curr_diffTime=differTimes(j);
+                       checkedTime(curr_diffTime)=1;
+                       if ismember(curr_diffTime+1,differTimes)
+                           % Stretch continues
+                           continue
                        else
-                           checkedTime=zeros(1,length(currOpto)); % reset
+                           % Stretch ends after this
+                           checkedTime(curr_diffTime+1)=1;
+                           lengthOfStretch=sum(checkedTime);
+                           if lengthOfStretch*timeStep>timeJitter
+                               stillSame=0;
+                               break
+                           else
+                               checkedTime=zeros(1,length(currOpto)); % reset
+                           end
                        end
                    end
                end
@@ -307,7 +329,7 @@ while any(isSorted==0)
 end
 isControlGroups=[];
 for i=1:length(groups)
-    if min(optoData(i,:))>0
+    if min(optoData(i,:))>=noiseThresh*2
         isControlGroups=[isControlGroups groups(i)];
     end
 end

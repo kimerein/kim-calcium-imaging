@@ -7,6 +7,9 @@ function varargout=analysisSettings()
 % may itself be a pulse pattern)
 
 % Specify which type of response to use
+response.ITI=2.5; % inter-trial interval in seconds
+response.discardTheseFiles=[130]; % used for debugging, arbitrary daq output value may cause trouble, will discard these file numbers from further analysis
+% in terms of index into movies list in Acquisition2P object
 response.type='inferred'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
 response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
 response.include_previous_trial=0; % if 1, will add some data from end of previous trial to beginning of each trial
