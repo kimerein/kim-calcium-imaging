@@ -7,10 +7,12 @@ function varargout=analysisSettings()
 % may itself be a pulse pattern)
 
 % Specify which type of response to use
+response.F_isSlidingWindow=true; % if true, F in delta F over F is from a sliding window
+response.F_nTrials=20; % number of trials to use in sliding window to calculate F
 response.ITI=2.5; % inter-trial interval in seconds
 response.discardTheseFiles=[]; % used for debugging, arbitrary daq output value may cause trouble, will discard these file numbers from further analysis
 % in terms of index into movies list in Acquisition2P object
-response.type='spikes'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
+response.type='inferred'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
 response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
 response.include_previous_trial=1; % if 1, will add some data from end of previous trial to beginning of each trial
 response.n_previous_trial_inds=10; % how many indices from previous trial end to add to beginning of each trial

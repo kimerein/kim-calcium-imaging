@@ -139,6 +139,40 @@ if length(movieTimestamps.timestamps)~=size(C_df,2)
     error('timestamps for movie do not match movie length');
 end
 
+% Get F from a sliding window if F_isSlidingWindow==true
+[~,~,~,~,~,~,response]=analysisSettings();
+if response.F_isSlidingWindow==true
+    C_components=C_df.*repmat(Df,1,size(C_df,2));
+    tempA=[A_or,b2];
+    nA=sqrt(sum(tempA.^2))';
+    [K,~] = size(C_components);
+    A_components = tempA/spdiags(nA,0,K,K);
+    A_components=A_components(:,1:end-1);
+    C_components=C_components(1:end-1,:);
+    Yf=Yk + (A_components'*full(b2))*f2 - C_components;
+   
+    % Recalculate F from a sliding window
+    nTrialsForWindow=response.F_nTrials;
+    % Convert this into n indices into C_components
+    startInds=find(movieTimestamps.startOfNewTrial==1,2,'first');
+    lengthOfFile=startInds(2)-startInds(1);
+    slidingWindow=nTrialsForWindow*lengthOfFile;
+    F=medfilt1(Yf,slidingWindow,[],2);
+    % Fix for old medfilt1 inaccuracies at boundaries
+    for i=1:size(F,1)
+        firstind=find(F(i,slidingWindow:end)>0,1,'first');
+        firstind=firstind+slidingWindow-1;
+        % Fill
+        F(i,1:firstind-1)=F(i,firstind);
+        lastind=find(F(i,1:end-slidingWindow+1)>0,1,'last');
+        % Fill
+        F(i,lastind:end)=F(i,lastind);  
+    end
+    % Recalculate C_df with new F
+    C_df=C_components./(F*1);
+    C_df=[C_df; zeros(1,size(C_df,2))];
+end
+
 % Now compare opto stim to dFoverF
 % Use saved data (from motion correction) about which frames were removed
 % from movies (when shutter on) to align opto, behavior and Ca2+ traces
