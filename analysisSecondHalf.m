@@ -165,6 +165,17 @@ ylabel('Opto Stim and Behavior');
 out.display_matrix=alltogether(1:end-1,1:end-1);
 [out.behavior,out.optogenetics,out.change,out.sorting,out.dist,out.traces,out.response]=analysisSettings();
 
+d=mkdir([loadDir '\optoTriggeredAnalysis\']);
+if d==1
+   save([loadDir '\optoTriggeredAnalysis\withinCellResponses.mat'],'withinCellResponses');
+   save([loadDir '\optoTriggeredAnalysis\withinCellStats.mat'],'withinCellStats');
+   save([loadDir '\optoTriggeredAnalysis\withinCellAverages.mat'],'withinCellAverages');
+   save([loadDir '\optoTriggeredAnalysis\times.mat'],'times');
+   save([loadDir '\optoTriggeredAnalysis\optoForProfile.mat'],'optoForProfile');
+   save([loadDir '\optoTriggeredAnalysis\out.mat'],'out');
+   save([loadDir '\optoTriggeredAnalysis\behForProfile.mat'],'behForProfile');
+end
+
 end
 
 function matrix_data=plotCellsByOpto(data,row,suppressFig)

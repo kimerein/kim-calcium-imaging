@@ -28,7 +28,11 @@ beforeInds=1:firstOptoStim-1;
 
 % Find time points after opto stim
 if matchAfterWindowToBeforeWindow==1
-    afterInds=firstOptoStim:firstOptoStim+length(beforeInds)-1;
+    if firstOptoStim+length(beforeInds)-1>size(behavior,2)
+        afterInds=firstOptoStim:size(behavior,2);
+    else
+        afterInds=firstOptoStim:firstOptoStim+length(beforeInds)-1;
+    end 
 else
     afterInds=firstOptoStim:length(opto_stim);
 end

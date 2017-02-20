@@ -143,6 +143,7 @@ if ~isempty(combinedMovie)
                 disp('Currently code supports only subdivision into 1,2,4,6,9,12 or 16 pieces');
         end
     end
+    
     try
         for i=1:length(combined)
             tiffWrite(combined{i},['combined' num2str(i) '.tif'],pathname,'uint16');

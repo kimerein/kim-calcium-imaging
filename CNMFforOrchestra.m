@@ -10,7 +10,7 @@ addpath(genpath('ca_source_extraction'));
 addpath(genpath('utilities'));
 
 % load file          
-nam = 'combined1.tif';          % insert path to tiff stack here
+nam = '\\research.files.med.harvard.edu\neurobio\MICROSCOPE\Kim\Data from Imaging Rig\Sabatini ScanImage Data\20161216\Mouse 3\Corrected\stim_Slice01_Channel01_File002.tif';          % insert path to tiff stack here
 sframe=1;						% user input: first frame to read (optional, default 1)
 num2read=100000;					% user input: how many frames to read   (optional, default until the end)
 
