@@ -32,9 +32,6 @@ areControls=checkForControl(obj);
 opto_shutterTimesRemoved=cell(1,size(optoData,1)); % Accomodates different time points shuttered in each trial
 optoTimestamps.timestamps_aftercrop=cell(1,size(optoData,1));
 for i=1:size(optoData,1)
-    if i==52
-        disp('stop here');
-    end
     [shuttered_opto,shuttered_times,tstamps]=removeShutteredTimes(obj,shutterData(i,:),optoData(i,:),times,1,30,groups(i),optoTimestamps.timestamps_nocrop(i,:),1);
     % Cut off or fill end of each trial so duration of opto matches duration of
     % imaging acquisition for trial

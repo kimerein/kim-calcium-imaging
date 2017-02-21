@@ -149,12 +149,15 @@ newOptoMapping=cell(length(diffVals),2);
 for i=1:length(diffVals)
     combineVals=find(newVals==diffVals(i));
     sumOpto=zeros(1,length(optoMapping{1,1}));
+    catName=[];
     for j=1:length(combineVals)
         sumOpto=sumOpto+optoMapping{combineVals(j),1};
+        catName=strcat(catName,optoMapping{combineVals(j),3});
     end
     sumOpto=sumOpto./length(combineVals);
     newOptoMapping{i,1}=sumOpto;
     newOptoMapping{i,2}=diffVals(i);
+    newOptoMapping{i,3}=catName;
 end
 
 handles.optoStimTypes=optoStimTypes;
