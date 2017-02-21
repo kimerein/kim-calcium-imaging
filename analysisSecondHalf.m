@@ -1,4 +1,4 @@
-function [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,out,behForProfile]=analysisSecondHalf(loadDir)
+function [withinCellResponses,withinCellStats,withinCellAverages,times,optoForProfile,out,behForProfile]=analysisSecondHalf(loadDir,saveData)
 
 % Load in data from first half of analysis
 listing=dir(loadDir);
@@ -108,6 +108,8 @@ for i=1:length(behProfiles)
         switch cset.display_type
             case 'pval x amp'
                 withinCellPlotOutput{i,j}=(withinCellStats{i,j}<cset.sigval).*withinCellChanges{i,j};
+            case 'amp'
+                withinCellPlotOutput{i,j}=withinCellChanges{i,j};
             otherwise
                 disp('Using default output: 1 if change during timewindow is significant; 0 otherwise.');
                 withinCellPlotOutput{i,j}=withinCellStats{i,j}<cset.sigval;
@@ -165,15 +167,17 @@ ylabel('Opto Stim and Behavior');
 out.display_matrix=alltogether(1:end-1,1:end-1);
 [out.behavior,out.optogenetics,out.change,out.sorting,out.dist,out.traces,out.response]=analysisSettings();
 
-d=mkdir([loadDir '\optoTriggeredAnalysis\']);
-if d==1
-   save([loadDir '\optoTriggeredAnalysis\withinCellResponses.mat'],'withinCellResponses');
-   save([loadDir '\optoTriggeredAnalysis\withinCellStats.mat'],'withinCellStats');
-   save([loadDir '\optoTriggeredAnalysis\withinCellAverages.mat'],'withinCellAverages');
-   save([loadDir '\optoTriggeredAnalysis\times.mat'],'times');
-   save([loadDir '\optoTriggeredAnalysis\optoForProfile.mat'],'optoForProfile');
-   save([loadDir '\optoTriggeredAnalysis\out.mat'],'out');
-   save([loadDir '\optoTriggeredAnalysis\behForProfile.mat'],'behForProfile');
+if saveData==1
+    d=mkdir([loadDir '\optoTriggeredAnalysis\']);
+    if d==1
+        save([loadDir '\optoTriggeredAnalysis\withinCellResponses.mat'],'withinCellResponses');
+        save([loadDir '\optoTriggeredAnalysis\withinCellStats.mat'],'withinCellStats');
+        save([loadDir '\optoTriggeredAnalysis\withinCellAverages.mat'],'withinCellAverages');
+        save([loadDir '\optoTriggeredAnalysis\times.mat'],'times');
+        save([loadDir '\optoTriggeredAnalysis\optoForProfile.mat'],'optoForProfile');
+        save([loadDir '\optoTriggeredAnalysis\out.mat'],'out');
+        save([loadDir '\optoTriggeredAnalysis\behForProfile.mat'],'behForProfile');
+    end
 end
 
 end
@@ -323,7 +327,11 @@ beforeInds=1:firstOptoStim-1;
 
 % Find time points after opto stim
 if matchAfterWindowToBeforeWindow==1
-    afterInds=firstOptoStim:firstOptoStim+length(beforeInds)-1;
+    if firstOptoStim+length(beforeInds)-1>size(behavior,2)
+        afterInds=firstOptoStim:size(behavior,2);
+    else
+        afterInds=firstOptoStim:firstOptoStim+length(beforeInds)-1;
+    end 
 else
     afterInds=firstOptoStim:length(opto_stim);
 end

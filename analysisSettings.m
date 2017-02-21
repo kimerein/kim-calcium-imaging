@@ -13,7 +13,7 @@ response.ITI=2.5; % inter-trial interval in seconds
 response.discardTheseFiles=[]; % used for debugging, arbitrary daq output value may cause trouble, will discard these file numbers from further analysis
 % in terms of index into movies list in Acquisition2P object
 response.type='inferred'; % 'inferred' from CNMF, 'raw' Ca2+ traces with only baseline subtraction, or 'spikes' from deconvolution
-response.shutter_only=1; % if 1, use shutter only as the stimulus (no opto), else use opto
+response.shutter_only=0; % if 1, use shutter only as the stimulus (no opto), else use opto
 response.include_previous_trial=0; % if 1, will add some data from end of previous trial to beginning of each trial
 response.n_previous_trial_inds=10; % how many indices from previous trial end to add to beginning of each trial
 
@@ -68,7 +68,7 @@ optogenetics.profiles{1}=[1];
 % optogenetics.profiles{2}=[2]; 
 % optogenetics.profiles{3}=[3]; % long stim
 % optogenetics.profiles{4}=[1:3]; % all opto stim types
-% % Also consider each opto stim type individually
+% Also consider each opto stim type individually
 % startLength=length(optogenetics.profiles)+1;
 % j=1;
 % for i=startLength:startLength+length(optoStimTypes)-1
@@ -100,10 +100,11 @@ change.show_windows=1; % if 1, will show time windows on example figure, else su
 change.stats.test_type='signrank'; % type of statistical test to perform
 change.stats.vs_baseline=1; % if 1, will compare the value during timewindow to the value during baselinewindow
 change.stats.vs_othertimewindow=[0 1.5]; % if vs_baseline is 0, then will compare the value during timewindow to the value during vs_othertimewindow
-change.display_type='pval x amp'; 
+change.display_type='amp'; 
 % Options are:
 % 'pval x amp'  displays the amplitude of the change during timewindow if
 %               the p-val is < change.sigval
+% 'amp'         displays the amplitude of the change during timewindow
 change.sigval=0.05; 
 
 % How to sort units in display

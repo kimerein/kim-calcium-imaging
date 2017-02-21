@@ -76,14 +76,14 @@ shutterOffTimes(:,1)=shutterOffTimes(:,1)-frameDuration;
 
 isShutteredTime=zeros(size(times));
 [~,~,~,~,~,~,resp]=analysisSettings();
-backup_otherData=otherData;
+
 for i=1:size(shutterOffTimes,1)
     isShutteredTime(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))=1;
     if isOpto==1
         if insertOptoDelta==1
             if resp.shutter_only~=1
                 % If otherData is high during this shuttered time window
-                if any(backup_otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
+                if any(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))>opto_on_thresh)
                     timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
                     %             % Make first time point after shuttered window high
                     %             otherData(timepointAfterShutter)=max(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2)));
@@ -95,7 +95,7 @@ for i=1:size(shutterOffTimes,1)
             else
                 % If otherData is low during this shuttered time window (i.e.,
                 % shutter only, no opto stim) FAKE OPTO
-                if all(backup_otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))<opto_on_thresh)
+                if all(otherData(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))<opto_on_thresh)
                     timepointAfterShutter=find(times>shutterOffTimes(i,2),1,'first');
                     %             % Make first time point after shuttered window high
                     %             otherData(timepointAfterShutter)=max(otherData);

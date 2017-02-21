@@ -96,6 +96,7 @@ else
         end
         temp=1:size(C_df,2);
         C_df=C_df(:,~ismember(temp,removeInds));
+        f2=f2(~ismember(temp,removeInds));
         Yk=Yk(:,~ismember(temp,removeInds));
         movieTimestamps.timestamps=movieTimestamps.timestamps(~ismember(temp,removeInds));
         movieTimestamps.startOfNewTrial=movieTimestamps.startOfNewTrial(~ismember(temp,removeInds));
