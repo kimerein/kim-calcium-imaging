@@ -27,6 +27,14 @@ for i=1:length(data_shutterTimesRemoved)
             % Find end of shutter epoch in movie that is closest in time to
             % beginning of opto pulse
             beginning_optopulse=currTrial_dataTimes(find(data_shutterTimesRemoved{i}>0.3,1,'first'));
+            if isempty(beginning_optopulse)
+                
+                
+                
+                
+                disp(i);
+                error('cannot find shuttered times in movie');
+            end
             [~,closestToOpto]=min(abs(currTrial_movieTimes-beginning_optopulse));
             temp=zeros(1,length(currTrial_movieTimes));
             temp(closestToOpto)=max(data_shutterTimesRemoved{i});

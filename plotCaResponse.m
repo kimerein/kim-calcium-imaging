@@ -31,7 +31,7 @@ for i=1:size(data,1)
         currData=currData-nanmean(currData(times>=cset.baselinewindow(1) & times<=cset.baselinewindow(2)),2);
     end
     responseIncludingNonsig(i,:)=currData;
-    if stat(i)<0.05
+    if stat(i)<cset.sigval
         responseAcrossAll(i,:)=currData;
         if change>0
             responseForIncrease(i,:)=currData;

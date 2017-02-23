@@ -65,8 +65,8 @@ end
 % these numbers are indices into optoMapping; combine all these opto stim types
 optoStimTypes=[1]; % all opto stim types in this expt
 optogenetics.profiles{1}=[1]; 
-% optogenetics.profiles{2}=[2]; 
-% optogenetics.profiles{3}=[3]; % long stim
+% optogenetics.profiles{2}=[1:8 10]; 
+% optogenetics.profiles{3}=[9]; 
 % optogenetics.profiles{4}=[1:3]; % all opto stim types
 % Also consider each opto stim type individually
 % startLength=length(optogenetics.profiles)+1;
@@ -106,6 +106,7 @@ change.display_type='amp';
 %               the p-val is < change.sigval
 % 'amp'         displays the amplitude of the change during timewindow
 change.sigval=0.05; 
+% change.sigval=1; 
 
 % How to sort units in display
 sorting.by_this_behavior=5; % Refers to indices of behavior.profiles
@@ -116,7 +117,7 @@ sorting.order='ascend'; % options are 'ascend' or 'descend'
 
 % Show effect distributions for this condition
 % In plotCaResponse
-dist.by_this_behavior=1; % Refers to indices of behavior.profiles
+dist.by_this_behavior=2; % Refers to indices of behavior.profiles
 dist.by_this_opto=1; % Refers to indices of optogenetics.profiles
 dist.nBins=1000; % Number of bins to use for histograms of effect distributions
 dist.normalize=0; % if 1, will normalize histograms

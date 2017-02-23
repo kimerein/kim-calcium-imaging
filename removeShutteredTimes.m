@@ -77,6 +77,7 @@ shutterOffTimes(:,1)=shutterOffTimes(:,1)-frameDuration;
 isShutteredTime=zeros(size(times));
 [~,~,~,~,~,~,resp]=analysisSettings();
 backup_otherData=otherData;
+putOptoStimIn=0;
 for i=1:size(shutterOffTimes,1)
     isShutteredTime(times>=shutterOffTimes(i,1) & times<=shutterOffTimes(i,2))=1;
     if isOpto==1
@@ -91,6 +92,7 @@ for i=1:size(shutterOffTimes,1)
                     % stim was presented
                     otherData(timepointAfterShutter)=group;
                     otherData([1:timepointAfterShutter-1 timepointAfterShutter+1:end])=0;
+                    putOptoStimIn=1;
                 end
             else
                 % If otherData is low during this shuttered time window (i.e.,
@@ -107,6 +109,19 @@ for i=1:size(shutterOffTimes,1)
             end
         end
     end
+end
+
+if isOpto==1 && insertOptoDelta==1 && ~any(otherData(isShutteredTime==0)>0)
+    % Problem, did not figure out where to put opto stim
+    % Find index where isShutteredTime is 0 closest to opto stim
+    optoind=find(backup_otherData>opto_on_thresh,1,'last');
+    optotime=times(optoind);
+    not_shuttered_times=times(isShutteredTime==0); 
+    [~,closest_shuttered_time]=min(abs(not_shuttered_times-optotime));
+    closest_to_opto_time=not_shuttered_times(closest_shuttered_time);
+    [~,ind_into_time]=min(abs(times-closest_to_opto_time));
+    otherData(ind_into_time)=group;
+    otherData([1:ind_into_time-1 ind_into_time+1:end])=0;
 end
 
 % Remove shuttered time points from otherData
