@@ -27,8 +27,18 @@ in.acq_obj=acq_obj;
 
 % Get description of each experimental condition for comparison across
 % experiments
-[condition_tags]=get_condition_tags_GUI(in);
-condition_tags=condition_tags{1};
-condition_tags=condition_tags(end-size(withinCellAverages,1)+1:end,end-size(withinCellAverages,2)+1:end);
-
+all_condition_tags=cell(size(withinCellResponses));
+for i=1:size(withinCellResponses,1)
+    in.i=i;
+    [condition_tags,condition_tags_pointer]=get_condition_tags_GUI(in);
+    condition_tags=condition_tags{1};
+    takeThese=condition_tags_pointer(condition_tags_pointer~=0);
+%     condition_tags=condition_tags(end-size(withinCellAverages,1)+1:end,end-size(withinCellAverages,2)+1:end);
+    condition_tags=condition_tags(takeThese);
+    for j=1:length(all_condition_tags(i,:))
+        all_condition_tags(i,j)=condition_tags(j);
+    end
+end
+condition_tags=all_condition_tags;
+    
 save([dataDir '\partwayData_moviematched\optoTriggeredAnalysis\condition_tags.mat'],'condition_tags');

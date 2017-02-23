@@ -18,7 +18,7 @@ for i=1:length(dirs)
                 for k=1:length(q)
                     tempstruct.(q{k})=a.(q{k});
                 end
-                out.(dataname)=tempstruct;
+                out.(dataname)=tempstruct.(dataname);
             end
         end
     else
@@ -33,16 +33,98 @@ for i=1:length(dirs)
                 for k=1:length(q)
                     tempstruct.(q{k})=a.(q{k});
                 end
-                tempout.(dataname)=tempstruct;
+                tempout.(dataname)=tempstruct.(dataname);
             end
         end
-        disp('hi');
-%         % match fields in tempout to fields in out
-%         % will only continue w fields in both
-%         fields_in_out=fieldnames(out);
-%         for j=1:length(fields_in_out)
-%             % concat
+        % match experimental conditions
+        if ~any(ismember(fieldnames(out),'condition_tags')) || ~any(ismember(fieldnames(tempout),'condition_tags'))
+            error('condition_tags must be in these directories, so that can match experimental conditions across expts');
+        end
+        [list1,list2,list1_index_into_list2]=matchExptConditions(out.condition_tags,tempout.condition_tags);
+        concatTheseConditions=list1_index_into_list2(~isnan(list1_index_into_list2));
+        % match fields in tempout to fields in out
+        fields_in_out=fieldnames(out);
+        for j=1:length(fields_in_out)
+            currf=fields_in_out{j};
+            concatout.(currf)=[];
+            if strcmp(currf,'times')
+                currcat=[];
+                part1=out.(currf);
+                part2=tempout.(currf);
+                if iscell(part1)
+                    if isa(part2,'double')
+                        currcat(1:length(part1)-1)=part1;
+                        currcat{length(part1)}=part2;
+                    elseif iscell(part2)
+                        currcat=[part1 part2];
+                    else
+                        error('unrecognized format for field times');
+                    end
+                elseif isa(part1,'double')
+                    if isa(part2,'double')
+                        currcat{1}=part1;
+                        currcat{2}=part2;
+                    elseif iscell(part2)
+                        currcat{1}=part1;
+                        currcat(2:2+length(part2)-1)=part2;
+                    else
+                        error('unrecognized format for field times');
+                    end
+                end     
+            elseif strcmp(currf,'out')
+                % discard
+            elseif iscell(out.(currf))
+                % make fields lists for match to list indices from matchExptConditions
+                temp=out.(currf);
+                out.(currf)=temp(1:end);
+                temp=tempout.(currf);
+                tempout.(currf)=temp(1:end);
+                                
+                concatInd=1;
+                part1=out.(currf);
+                part2=tempout.(currf);
+                currcat=[];
+                % concatenate experimental conditions that match, pulling
+                % them to the top of structure
+                if ~isempty(concatTheseConditions)
+                    for k=1:length(list1_index_into_list2)
+                        if isnan(list1_index_into_list2(k))
+                        else
+                            getThis1=part1(k);
+                            getThis2=part2(list1_index_into_list2(k));
+                            if strcmp(currf,'condition_tags') % if these are the condition tags, take a consensus
+                                currcat{concatInd}=getThis1; % will be the same tag
+                            else % concatenate
+                                currcat{concatInd}=[getThis1 getThis2];
+                            end
+                            concatInd=concatInd+1;
+                        end
+                    end
+                end
+                % add in experimental conditions from out that are not in
+                % tempout
+                notin=find(isnan(list1_index_into_list2));
+                if ~isempty(notin)
+                    for k=1:length(notin)
+                        getThis1=part1(notin(k));
+                        currcat{concatInd}=[getThis1];
+                        concatInd=concatInd+1;
+                    end
+                end
+                % add in experimental conditions from tempout that are not
+                % in out
+                condsintempout=1:length(part2);
+                notin=condsintempout(~ismember(condsintempout,list1_index_into_list2));
+                if ~isempty(notin)
+                    for k=1:length(notin)
+                        getThis2=part2(notin(k));
+                        currcat{concatInd}=[getThis2];
+                        concatInd=concatInd+1;
+                    end
+                end
+            end
+            concatout.(currf)=currcat;
+        end
+        out=concatout;
     end
 end
-            
-            
