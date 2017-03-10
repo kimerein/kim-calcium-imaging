@@ -144,14 +144,14 @@ if ~isempty(combinedMovie)
         end
     end
     
-%     cropHere.rows=zeros(1,size(combined{1},1));
-%     cropHere.columns=zeros(1,size(combined{1},2));
-%     cropHere.columns(248:256)=1;
-%     cropHere.columns(1:22)=1;
-%     cropHere.rows(120:128)=1;
-%     combined{1}=cropThisMovie(combined{1},cropHere);
-%     disp('croppedMovie');
-%     combined{1}=uncropThisMovie(combined{1},cropHere);
+    cropHere.rows=zeros(1,size(combined{1},1));
+    cropHere.columns=zeros(1,size(combined{1},2));
+    cropHere.columns(249:256)=1;
+    cropHere.columns(1:18)=1;
+    cropHere.rows(123:128)=1;
+    combined{1}=cropThisMovie(combined{1},cropHere);
+    disp('croppedMovie');
+    combined{1}=uncropThisMovie(combined{1},cropHere);
     
     try
         for i=1:length(combined)

@@ -83,20 +83,21 @@ for i=1:length(behProfiles)
             switch cset.stats.test_type
                 case 'signrank'
                     % Paired non-parametric
-                    if cset.stats.vs_baseline==1
-                        if isempty(currTimewindow-currBaselinewindow)
-                            p=nan;
-                        else
-                            p=signrank(currTimewindow-currBaselinewindow);
-                        end
-                    else
-                        currOtherwindow=nanmean(currResponse(:,times>=cset.stats.vs_othertimewindow(1) & times<=cset.stats.vs_othertimewindow(2)),2);
-                        if isempty(currTimewindow-currOtherwindow)
-                            p=nan;
-                        else
-                            p=signrank(currTimewindow-currOtherwindow);
-                        end
-                    end
+%                     if cset.stats.vs_baseline==1
+%                         if isempty(currTimewindow-currBaselinewindow)
+%                             p=nan;
+%                         else
+%                             p=signrank(currTimewindow-currBaselinewindow);
+%                         end
+%                     else
+%                         currOtherwindow=nanmean(currResponse(:,times>=cset.stats.vs_othertimewindow(1) & times<=cset.stats.vs_othertimewindow(2)),2);
+%                         if isempty(currTimewindow-currOtherwindow)
+%                             p=nan;
+%                         else
+%                             p=signrank(currTimewindow-currOtherwindow);
+%                         end
+%                     end
+                    p=0;
                 otherwise
                     error('Unrecognized statistical test type in change.stats.test_type');
             end

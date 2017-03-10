@@ -195,6 +195,8 @@ if size(optoMapping,1)~=size(withinCellAverages,2)
         new_optoMapping{i,3}=optoMapping{currprofile(1),3}; % not the best, should try to take consensus
     end
     optoMapping=new_optoMapping;
+else
+    new_optoStimTypes=optoStimTypes;
 end
        
 
@@ -285,7 +287,7 @@ for j=1:size(withinCellAverages,2)
     default_opto_string=['_Hz_' num2str(optoStimIntervals(mi)) 'V'];
     handles.condition_labels_pointer(beh_i,j)=(beh_i-1)*size(withinCellResponses,1)+j;
     if ~isempty(opto_info{j})
-        default_opto_string=[opto_info{j} '_' num2str(optoStimIntervals(mi)) 'V'];
+        default_opto_string=[opto_info{j}];
         handles.condition_labels{handles.condition_labels_pointer(beh_i,j)}=[default_beh_string '_' default_opto_string];
     else
         handles.condition_labels{handles.condition_labels_pointer(beh_i,j)}=[default_beh_string default_opto_string '_' optoMapping{j,3}];

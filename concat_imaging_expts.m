@@ -21,6 +21,15 @@ for i=1:length(dirs)
                 out.(dataname)=tempstruct.(dataname);
             end
         end
+        out.cell_from_expt=cell(size(out.withinCellResponses));
+        for j=1:length(out.cell_from_expt(1:end))
+            out.cell_from_expt{j}=cell(size(out.withinCellResponses{j}));
+            temp=out.cell_from_expt{j};
+            for k=1:length(temp(1:end))
+                temp{k}=i;
+            end
+            out.cell_from_expt{j}=temp;
+        end
     else
         for j=1:length(listing)
             tempstruct=[];
@@ -35,6 +44,15 @@ for i=1:length(dirs)
                 end
                 tempout.(dataname)=tempstruct.(dataname);
             end
+        end
+        tempout.cell_from_expt=cell(size(tempout.withinCellResponses));
+        for j=1:length(tempout.cell_from_expt(1:end))
+            tempout.cell_from_expt{j}=cell(size(tempout.withinCellResponses{j}));
+            temp=tempout.cell_from_expt{j};
+            for k=1:length(temp(1:end))
+                temp{k}=i;
+            end
+            tempout.cell_from_expt{j}=temp;
         end
         % match experimental conditions
         if ~any(ismember(fieldnames(out),'condition_tags')) || ~any(ismember(fieldnames(tempout),'condition_tags'))
@@ -53,8 +71,8 @@ for i=1:length(dirs)
                 part2=tempout.(currf);
                 if iscell(part1)
                     if isa(part2,'double')
-                        currcat(1:length(part1)-1)=part1;
-                        currcat{length(part1)}=part2;
+                        currcat=part1;
+                        currcat{length(part1)+1}=part2;
                     elseif iscell(part2)
                         currcat=[part1 part2];
                     else
@@ -73,13 +91,38 @@ for i=1:length(dirs)
                 end     
             elseif strcmp(currf,'out')
                 % discard
+            elseif strcmp(currf,'trialByTrialBeh')
+                % concatenate all trials, this will then match to condition
+                % that includes all trials
+                currcat=[];
+                part1=out.(currf);
+                part2=tempout.(currf);
+                if iscell(part1)
+                    if isa(part2,'double')
+                        currcat=part1;
+                        currcat{length(part1)+1}=part2;
+                    elseif iscell(part2)
+                        currcat=[part1 part2];
+                    else
+                        error('unrecognized format for field trialByTrialBeh');
+                    end
+                elseif isa(part1,'double')
+                    if isa(part2,'double')
+                        currcat{1}=part1;
+                        currcat{2}=part2;
+                    elseif iscell(part2)
+                        currcat{1}=part1;
+                        currcat(2:2+length(part2)-1)=part2;
+                    else
+                        error('unrecognized format for field trialByTrialBeh');
+                    end
+                end     
             elseif iscell(out.(currf))
                 % make fields lists for match to list indices from matchExptConditions
                 temp=out.(currf);
                 out.(currf)=temp(1:end);
                 temp=tempout.(currf);
-                tempout.(currf)=temp(1:end);
-                                
+                tempout.(currf)=temp(1:end);               
                 concatInd=1;
                 part1=out.(currf);
                 part2=tempout.(currf);
@@ -90,8 +133,14 @@ for i=1:length(dirs)
                     for k=1:length(list1_index_into_list2)
                         if isnan(list1_index_into_list2(k))
                         else
-                            getThis1=part1(k);
-                            getThis2=part2(list1_index_into_list2(k));
+                            getThis1=part1{k};
+                            getThis2=part2{list1_index_into_list2(k)};
+                            if ~iscell(getThis1)
+                                getThis1=part1(k);
+                            end
+                            if ~iscell(getThis2)
+                                getThis2=part2(list1_index_into_list2(k));
+                            end
                             if strcmp(currf,'condition_tags') % if these are the condition tags, take a consensus
                                 currcat{concatInd}=getThis1; % will be the same tag
                             else % concatenate
@@ -106,7 +155,10 @@ for i=1:length(dirs)
                 notin=find(isnan(list1_index_into_list2));
                 if ~isempty(notin)
                     for k=1:length(notin)
-                        getThis1=part1(notin(k));
+                        getThis1=part1{notin(k)};
+                        if ~iscell(getThis1)
+                            getThis1=part1(notin(k));
+                        end
                         currcat{concatInd}=[getThis1];
                         concatInd=concatInd+1;
                     end
@@ -117,7 +169,10 @@ for i=1:length(dirs)
                 notin=condsintempout(~ismember(condsintempout,list1_index_into_list2));
                 if ~isempty(notin)
                     for k=1:length(notin)
-                        getThis2=part2(notin(k));
+                        getThis2=part2{notin(k)};
+                        if ~iscell(getThis2)
+                            getThis2=part2(notin(k));
+                        end
                         currcat{concatInd}=[getThis2];
                         concatInd=concatInd+1;
                     end
