@@ -3,6 +3,7 @@ function out=concat_imaging_expts(dirs)
 % dirs is a list of directories containing expts' imaging data
 
 for i=1:length(dirs)
+    disp(i);
     currdir=dirs{i};
     listing=dir(currdir);
     if i==1

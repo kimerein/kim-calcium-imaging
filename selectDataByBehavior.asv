@@ -1,0 +1,22 @@
+function selectDataByBehavior(allSingleTrialBeh,allCellTrialResponses,timestep)
+
+    
+
+
+
+end
+
+function constantSpeed_behaviorProfile(beh,difference_range,window1,window2,times)
+
+
+
+
+end
+
+function isConstantSpeed(beh,difference_range,window1,window2,times)
+
+beh1=nanmean(beh(times>=window1(1) & times<=window1(2)));
+beh2=nanmean(beh(times>=window2(1) & times<=window2(2)));
+
+
+end

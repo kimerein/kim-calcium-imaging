@@ -4,6 +4,7 @@ samplingRate=acq_obj.sabaMetadata.phys.settings.inputRate; % Get sampling rate o
 times=0:1/samplingRate:(1/samplingRate)*length(positionVector)-(1/samplingRate);
 
 velThresh=0.0015; % max rate reasonable for mouse to run
+% velThresh=0.001; % max rate reasonable for mouse to run
 
 % Find where wheel angle flips back to 0
 % For all times when wheel angle flips back to 0, make curve continuous

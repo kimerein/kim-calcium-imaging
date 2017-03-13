@@ -120,11 +120,10 @@ else
             optoExpts{j}=av;
             behExpts{j}=avbeh;
             exptTimes{j}=alldata.times{j};
-            withinExpt_cellAvs=celltemp{j};
-            cellAvs{j}=withinExpt_cellAvs;
-            cellfromtempind(nCells+1:size(withinExpt_cellAvs,1))=exptcount;
+            cellAvs{j}=celltemp{j};
+            cellfromtempind(nCells+1:nCells+size(celltemp{j},1))=exptcount;
             exptcount=exptcount+1;
-            nCells=nCells+size(withinExpt_cellAvs,1);
+            nCells=nCells+size(celltemp{j},1);
         end
         if length(temp)>1       % data from more than one expt for this condition
             % need to align to opto stim
