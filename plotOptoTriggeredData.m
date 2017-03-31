@@ -5,7 +5,8 @@ baselinesubtract=1;
 baseline=[3 4.224];
 measurewindow=[4.224 5.224];
 
-temp=data{ind};
+% temp=data{ind};
+temp=data;
 
 if baselinesubtract==1
     temp=temp-repmat(nanmean(temp(:,times>=baseline(1) & times<=baseline(2)),2),1,size(temp,2));
@@ -18,8 +19,10 @@ temp=temp(takeCells(~ismember(takeCells,excludeCells)),:);
 
 temp=temp(~all(temp==0 | isnan(temp),2),:);
 
-change=nanmean(temp(:,times>=measurewindow(1) & times<=measurewindow(2)),2)-nanmean(temp(:,times>=baseline(1) & times<=baseline(2)),2);
+% change=nanmean(temp(:,times>=measurewindow(1) & times<=measurewindow(2)),2)-nanmean(temp(:,times>=baseline(1) & times<=baseline(2)),2);
 % temp=temp(change>0.01,:);
+change=nanmean(temp(:,times>=measurewindow(1) & times<=measurewindow(2)),2)-nanmean(temp(:,times>=baseline(1) & times<=baseline(2)),2);
+% temp=temp(change<0,:);
 
 figure(); 
 plot(times,nanmean(temp,1),'Color','b');
@@ -33,7 +36,8 @@ tempav=nanmean(temp,1);
 tempav(isinf(tempav))=0;
 ma=max(tempav);
 plot(times,nanmean(opto{ind},1).*ma,'Color','r');
-plot(times,nanmean(beh{ind},1).*ma,'Color',[0.8 0.5 0]);
+% plot(times,nanmean(beh{ind},1).*ma,'Color',[0.8 0.5 0]);
+plot(times,nanmean(beh,1).*ma,'Color',[0.8 0.5 0]);
 tochange=regexp(tit,'_');
 tit(tochange)=' ';
 title(tit);
