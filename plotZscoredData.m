@@ -1,4 +1,6 @@
-function si=plotZscoredData(data,opto,ind,times,tit,beh,si)
+function si=plotZscoredData(data,times,tit,beh,si)
+
+excludeEmptyRows=0;
 
 % temp=data{ind};
 temp=data;
@@ -15,9 +17,6 @@ temp=(temp-repmat(nanmean(temp,2),1,size(temp,2)))./repmat(nanstd(temp,[],2),1,s
 % outlierInd=max(temp,[],2)>outlierThresh;
 % temp=temp(outlierInd~=1,:);
 
-% Fill in nans
-temp(isnan(temp))=nanmean(nanmean(temp,1),2);
-
 if isempty(si)
     idx=kmeans(temp(:,times>=3 & times<=6),3);
     [~,si]=sort(idx);
@@ -27,6 +26,14 @@ else
     temp=temp(si,:);
     beh=beh(si,:);
 end
+
+if excludeEmptyRows==1
+    beh=beh(~isnan(nanmean(temp,2)),:);
+    temp=temp(~isnan(nanmean(temp,2)),:);   
+end
+
+% Fill in nans
+temp(isnan(temp))=nanmean(nanmean(temp,1),2);
 
 figure(); 
 imagesc(temp);
