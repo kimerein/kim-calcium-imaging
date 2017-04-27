@@ -1,24 +1,24 @@
-function si=plotZscoredData(data,opto,ind,times,tit,beh,si)
+function si=plotZscoredData_SingleTrials(data,times,tit,beh,si)
+
+excludeEmptyRows=0;
 
 % temp=data{ind};
 temp=data;
 
 % Transform to Z score
-% temp=(temp-repmat(nanmean(temp,2),1,size(temp,2)))./repmat(nanstd(temp,[],2),1,size(temp,2));
+temp=(temp-repmat(nanmean(temp,2),1,size(temp,2)))./repmat(nanstd(temp,[],2),1,size(temp,2));
 
 % Transform to Z score wrt baseline
-baseline=[2 4];
-temp=(temp-repmat(nanmean(temp(:,times>=baseline(1) & times<=baseline(2)),2),1,size(temp,2)))./repmat(nanstd(temp(:,times>=baseline(1) & times<=baseline(2)),[],2),1,size(temp,2));
-
-% Fill in nans
-temp(isnan(temp))=nanmean(nanmean(temp,1),2);
+% baseline=[2.1 3.9];
+% temp=(temp-repmat(nanmean(temp(:,times>=baseline(1) & times<=baseline(2)),2),1,size(temp,2)))./repmat(nanstd(temp(:,times>=baseline(1) & times<=baseline(2)),[],2),1,size(temp,2));
 
 % Exclude outliers
-outlierThresh=10^5;
-outlierInd=max(temp,2)>outlierThresh;
+% outlierThresh=10^2;
+% outlierInd=max(temp,[],2)>outlierThresh;
+% temp=temp(outlierInd~=1,:);
 
 if isempty(si)
-    idx=kmeans(temp,3);
+    idx=kmeans(temp(:,times>=3 & times<=6),3);
     [~,si]=sort(idx);
     temp=temp(si,:);
     beh=beh(si,:);
@@ -26,6 +26,14 @@ else
     temp=temp(si,:);
     beh=beh(si,:);
 end
+
+if excludeEmptyRows==1
+    beh=beh(~isnan(nanmean(temp,2)),:);
+    temp=temp(~isnan(nanmean(temp,2)),:);   
+end
+
+% Fill in nans
+temp(isnan(temp))=nanmean(nanmean(temp,1),2);
 
 figure(); 
 imagesc(temp);

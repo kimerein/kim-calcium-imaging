@@ -13,9 +13,13 @@ for i=1:length(allTrialsResponses)
     curr=allTrialsResponses{i};
     currbeh=allTrialsBeh{i};
     optoProfile=ismember(allOptoTypes{i},takeTheseOptoConds{cell_from_expt{i}});
-    behProfile=constantSpeed_behaviorProfile(currbeh,[-0.0005 0.0005],window1,window2,times);
+%     behProfile=constantSpeed_behaviorProfile(currbeh,[-0.0005 0.0005],window1,window2,times);
+    behProfile=constantSpeed_behaviorProfile(currbeh,[-1000 1000],window1,window2,times);
+    responseProfile=largeResponse_responseProfile(curr,0,window1,window2,times);
     matrixCellResponses(i,:)=nanmean(curr(logical(optoProfile==1 & behProfile'==1),:),1);
+%     matrixCellResponses(i,:)=nanmean(curr(logical(optoProfile==1 & behProfile'==1 & responseProfile==1),:),1);
     matrixBeh(i,:)=nanmean(currbeh(logical(optoProfile==1 & behProfile'==1),:),1);
+%     matrixBeh(i,:)=nanmean(currbeh(logical(optoProfile==1 & behProfile'==1 & responseProfile==1),:),1);
 end  
 
 end
@@ -40,5 +44,13 @@ if abs(beh1-beh2)>difference_range(1) && abs(beh1-beh2)<difference_range(2)
 else
     isconstant=0;
 end
+
+end
+
+function profile=largeResponse_responseProfile(response,threshold,window1,window2,times)
+
+resp1=nanmean(response(:,times>=window1(1) & times<=window1(2)),2);
+resp2=nanmean(response(:,times>=window2(1) & times<=window2(2)),2);
+profile=(resp2-resp1)>threshold;
 
 end

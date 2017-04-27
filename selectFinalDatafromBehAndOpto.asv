@@ -1,8 +1,0 @@
-function selectFinalDatafromBehAndOpto(allBehProfiles,allTrialsResponses,allTrialsBeh,allOptoTypes,timestep,allOptoData)
-
-times=0:timestep:(size(allTrialsResponses{1},2)-1)*timestep;
-optoAt=times(nanmean(allOptoData,1)>0);
-times=times-optoAt;
-
-matrixBeh=nan(length(allCellTrialResponses),length(times));
-matrixCellResponses=nan(length(allCellTrialResponses),length(times));

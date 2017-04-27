@@ -18,7 +18,7 @@ temp=(temp-repmat(nanmean(temp,2),1,size(temp,2)))./repmat(nanstd(temp,[],2),1,s
 % temp=temp(outlierInd~=1,:);
 
 if isempty(si)
-    idx=kmeans(temp(:,times>=3 & times<=6),3);
+    idx=kmeans(temp(:,times>=3 & times<=12),3);
     [~,si]=sort(idx);
     temp=temp(si,:);
     beh=beh(si,:);
